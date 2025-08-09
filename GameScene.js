@@ -486,7 +486,12 @@ class GameScene extends Phaser.Scene {
     } else {
       // X → O → sledeća tabla
       this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
-      this.advanceToNextBoard();
+      
+      // Prelazi na sledeću tablu SAMO ako je O odigrao potez
+      if (this.currentPlayer === 'X') {
+        this.advanceToNextBoard();
+      }
+      
       this.updateBoardsVisual();
     }
 
