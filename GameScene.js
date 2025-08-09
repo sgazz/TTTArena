@@ -10,10 +10,23 @@ class GameScene extends Phaser.Scene {
     this.currentBoardIndex = 0;
     this.currentPlayer = 'X';
     this.mode = 'PvP';
-    this.cellSize = 80;
-    this.cellSpacing = 10;
+    this.cellSize = 50; // Smanjili smo sa 80 na 50
+    this.cellSpacing = 6; // Smanjili smo sa 10 na 6
     this.minis = [];
     this.score = { X: 0, O: 0 };
+    
+    // Herojska imena za table
+    this.boardNames = [
+      '⚡ Thunder',    // #1 - Grom
+      '🔥 Phoenix',    // #2 - Feniks
+      '👤 Shadow',     // #3 - Senka
+      '🐉 Dragon',     // #4 - Zmaj
+      '⚔️ Valkyrie',   // #5 - Valkira
+      '🌪️ Storm',      // #6 - Oluja
+      '🗡️ Blade',      // #7 - Oštrica
+      '❄️ Frost',      // #8 - Led
+      '🔥 Flame'       // #9 - Plamen
+    ];
     
     // Timer system
     this.timers = { X: 60, O: 60 };
@@ -247,13 +260,41 @@ class GameScene extends Phaser.Scene {
 
   drawHeader() {
     if (this.headerText) this.headerText.destroy();
-    this.headerText = this.add.text(18, 18, `Board: ${this.currentBoardIndex+1} | Player: ${this.currentPlayer}`, { fontSize: '20px', color: '#ffffff' });
+    // Pozicioniramo header u centru iznad tabla
+    const canvasWidth = 1200;
+    const uiLeftWidth = 250;
+    const uiRightWidth = 220;
+    const gameAreaWidth = canvasWidth - uiLeftWidth - uiRightWidth;
+    const headerX = uiLeftWidth + gameAreaWidth / 2;
+    const headerY = 60;
+    
+    this.headerText = this.add.text(headerX, headerY, `Arena: ${this.boardNames[this.currentBoardIndex]} | Player: ${this.currentPlayer}`, { 
+      fontSize: '14px', 
+      color: '#ffffff',
+      fontFamily: 'Arial, sans-serif'
+    }).setOrigin(0.5);
   }
 
   drawBoards() {
     console.log('Drawing boards...');
-    const startX = 100, startY = 100;
+    // Centriramo table u canvas-u, ostavljajući prostor za UI elemente
+    const canvasWidth = 1200;
+    const canvasHeight = 900;
+    const uiTopHeight = 100; // Prostor za gornje UI elemente (Semafor iznad tabla)
+    const uiBottomHeight = 80; // Prostor za donje UI elemente
+    const uiLeftWidth = 250; // Prostor za levi UI
+    const uiRightWidth = 220; // Prostor za desni UI
+    
+    const gameAreaWidth = canvasWidth - uiLeftWidth - uiRightWidth;
+    const gameAreaHeight = canvasHeight - uiTopHeight - uiBottomHeight;
+    
     const miniSize = this.cellSize*3 + this.cellSpacing*2;
+    const totalBoardsWidth = 3 * miniSize + 2 * 50; // 3 table + 2 razmaka
+    const totalBoardsHeight = 3 * miniSize + 2 * 50;
+    
+    const startX = uiLeftWidth + (gameAreaWidth - totalBoardsWidth) / 2;
+    const startY = uiTopHeight + (gameAreaHeight - totalBoardsHeight) / 2;
+    
     console.log(`Board positions: startX=${startX}, startY=${startY}, miniSize=${miniSize}`);
     
     if (this.boardGroup) {
@@ -264,36 +305,40 @@ class GameScene extends Phaser.Scene {
     for (let b = 0; b < this.BOARD_COUNT; b++) {
       const r = Math.floor(b / 3);
       const c = b % 3;
-      const x0 = startX + c * (miniSize + 24);
-      const y0 = startY + r * (miniSize + 24);
+      const x0 = startX + c * (miniSize + 50);
+      const y0 = startY + r * (miniSize + 50);
       console.log(`Board ${b}: r=${r}, c=${c}, x0=${x0}, y0=${y0}`);
 
-      // Background
-      const bg = this.add.rectangle(x0 + miniSize/2, y0 + miniSize/2, miniSize, miniSize, 0x1f2937).setStrokeStyle(2, 0x334155);
+      // Background - veći kvadrat
+      const bg = this.add.rectangle(x0 + miniSize/2, y0 + miniSize/2, miniSize + 20, miniSize + 20, 0x1f2937).setStrokeStyle(2, 0x334155);
       this.boardGroup.add(bg);
 
-      // Highlight active board
-      const highlight = this.add.rectangle(x0 + miniSize/2, y0 + miniSize/2, miniSize+6, miniSize+6).setStrokeStyle(3, 0xffff66);
-      highlight.setVisible(b === this.currentBoardIndex);
+      // Highlight active board - veći kvadrat
+      const highlight = this.add.rectangle(x0 + miniSize/2, y0 + miniSize/2, miniSize + 26, miniSize + 26).setStrokeStyle(3, 0xffff66);
+      highlight.setVisible(b === this.currentBoardIndex && !this.boardFinished[b]);
       this.boardGroup.add(highlight);
 
-      // Cells
+      // Cells - centriramo u background kvadratu
       const cells = [];
+      const totalGridSize = 3 * this.cellSize + 2 * this.cellSpacing;
+      const gridOffsetX = (miniSize - totalGridSize) / 2;
+      const gridOffsetY = (miniSize - totalGridSize) / 2;
+      
       for (let row=0; row<3; row++){
         for (let col=0; col<3; col++){
-          const cx = x0 + col * (this.cellSize + this.cellSpacing) + this.cellSize/2 + 6;
-          const cy = y0 + row * (this.cellSize + this.cellSpacing) + this.cellSize/2 + 6;
+          const cx = x0 + gridOffsetX + col * (this.cellSize + this.cellSpacing) + this.cellSize/2;
+          const cy = y0 + gridOffsetY + row * (this.cellSize + this.cellSpacing) + this.cellSize/2;
           const rect = this.add.rectangle(cx, cy, this.cellSize, this.cellSize, 0x0b1220).setStrokeStyle(1, 0x475569);
-          const txt = this.add.text(cx, cy, this.boards[b][row*3+col] || '', { fontSize: '22px', color: '#e2e8f0' }).setOrigin(0.5);
+          const txt = this.add.text(cx, cy, this.boards[b][row*3+col] || '', { fontSize: '16px', color: '#e2e8f0', fontFamily: 'Arial, sans-serif' }).setOrigin(0.5);
           cells.push({ rect, txt, index: row*3+col, cx, cy });
         }
       }
 
-      // Board number
-      const label = this.add.text(x0 + 6, y0 - 18, `#${b+1}`, { fontSize: '14px', color: '#cbd5e1' });
+      // Board name - herojsko ime - centriran iznad većeg background kvadrata
+      const label = this.add.text(x0 + (miniSize + 20)/2, y0 - 22, this.boardNames[b], { fontSize: '12px', color: '#ffcc66', fontFamily: 'Arial, sans-serif', fontStyle: 'bold' }).setOrigin(0.5);
 
-      // Winner indicator
-      const winnerStamp = this.add.text(x0 + miniSize - 34, y0 - 18, this.boardWinners[b] ? this.boardWinners[b] : '', { fontSize: '14px', color: '#ffcc66' });
+      // Winner indicator - manji font - centriran u gornjem desnom uglu većeg background kvadrata
+      const winnerStamp = this.add.text(x0 + miniSize + 5, y0 - 15, this.boardWinners[b] ? this.boardWinners[b] : '', { fontSize: '12px', color: '#ffcc66', fontFamily: 'Arial, sans-serif' }).setOrigin(0.5);
 
       this.minis.push({
         x0, y0, bg, highlight, cells, label, winnerStamp, index: b
@@ -780,11 +825,18 @@ class GameScene extends Phaser.Scene {
 
   showPauseOverlay() {
     if (!this.pauseOverlay) {
-      this.pauseOverlay = this.add.rectangle(480, 360, 960, 720, 0x000000, 0.7);
-      this.pauseText = this.add.text(480, 360, 'PAUSED', { 
+      // Centriramo pause overlay u canvas-u
+      const canvasWidth = 1200;
+      const canvasHeight = 900;
+      const overlayX = canvasWidth / 2;
+      const overlayY = canvasHeight / 2;
+      
+      this.pauseOverlay = this.add.rectangle(overlayX, overlayY, canvasWidth, canvasHeight, 0x000000, 0.7);
+      this.pauseText = this.add.text(overlayX, overlayY, 'PAUSED', { 
         fontSize: '48px', 
         color: '#ffffff',
-        fontStyle: 'bold'
+        fontStyle: 'bold',
+        fontFamily: 'Arial, sans-serif'
       }).setOrigin(0.5);
     }
   }
@@ -954,12 +1006,20 @@ class GameScene extends Phaser.Scene {
   }
 
   showTournamentInfo() {
-    // Create tournament info overlay
+    // Create tournament info overlay - pozicioniramo u centru iznad tabla
     if (!this.tournamentInfo) {
-      this.tournamentInfo = this.add.rectangle(480, 100, 400, 80, 0x000000, 0.8);
-      this.tournamentText = this.add.text(480, 100, '', { 
+      const canvasWidth = 1200;
+      const uiLeftWidth = 250;
+      const uiRightWidth = 220;
+      const gameAreaWidth = canvasWidth - uiLeftWidth - uiRightWidth;
+      const infoX = uiLeftWidth + gameAreaWidth / 2;
+      const infoY = 100;
+      
+      this.tournamentInfo = this.add.rectangle(infoX, infoY, 400, 80, 0x000000, 0.8);
+      this.tournamentText = this.add.text(infoX, infoY, '', { 
         fontSize: '16px', 
-        color: '#ffffff'
+        color: '#ffffff',
+        fontFamily: 'Arial, sans-serif'
       }).setOrigin(0.5);
     }
     this.updateTournamentInfo();

@@ -15,8 +15,8 @@ if (typeof GameScene === 'undefined') {
 const config = {
   type: Phaser.AUTO,
   backgroundColor: 0x0f1720,
-  width: 960,
-  height: 720,
+  width: 1200,
+  height: 900,
   parent: 'game-container',
   scene: [ GameScene ]
 };
@@ -114,6 +114,21 @@ window.addEventListener('DOMContentLoaded', () => {
       s.startTournament();
     } else {
       console.error('GameScene not found');
+    }
+  };
+
+  // Theme toggle
+  const btnTheme = document.getElementById('btnTheme');
+  btnTheme.onclick = () => {
+    const root = document.documentElement;
+    const isDark = root.getAttribute('data-theme') !== 'light';
+    
+    if (isDark) {
+      root.setAttribute('data-theme', 'light');
+      btnTheme.innerHTML = '<i class="fas fa-sun"></i>';
+    } else {
+      root.removeAttribute('data-theme');
+      btnTheme.innerHTML = '<i class="fas fa-moon"></i>';
     }
   };
 });
