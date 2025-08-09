@@ -106,29 +106,19 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  const btnTournament = document.getElementById('btnTournament');
-  btnTournament.onclick = () => {
-    console.log('Tournament clicked');
-    const s = game.scene.keys['GameScene'];
-    if (s) {
-      s.startTournament();
-    } else {
-      console.error('GameScene not found');
-    }
-  };
+  // Tournament button click handler
+  const tournamentButton = document.getElementById('tournament-button');
+  
+  if (tournamentButton) {
+    tournamentButton.onclick = () => {
+      const s = game.scene.keys['GameScene'];
+      if (s) {
+        s.startTournament();
+      } else {
+        console.error('GameScene not found');
+      }
+    };
+  }
 
-  // Theme toggle
-  const btnTheme = document.getElementById('btnTheme');
-  btnTheme.onclick = () => {
-    const root = document.documentElement;
-    const isDark = root.getAttribute('data-theme') !== 'light';
-    
-    if (isDark) {
-      root.setAttribute('data-theme', 'light');
-      btnTheme.innerHTML = '<i class="fas fa-sun"></i>';
-    } else {
-      root.removeAttribute('data-theme');
-      btnTheme.innerHTML = '<i class="fas fa-moon"></i>';
-    }
-  };
+  // Theme toggle uklonjen
 });

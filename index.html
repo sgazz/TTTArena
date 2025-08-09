@@ -50,9 +50,9 @@
       top: 20px; 
       z-index: 10;
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 8px;
-      max-width: 500px;
+      max-width: 120px;
     }
 
     button { 
@@ -65,7 +65,8 @@
       font-size: 12px;
       font-weight: 500;
       transition: all 0.2s ease;
-      min-width: 60px;
+      min-width: 100px;
+      width: 100%;
     }
 
     button:hover { 
@@ -86,13 +87,14 @@
       top: 20px; 
       transform: translateX(-50%);
       background: var(--ui-bg);
-      padding: 8px 12px;
+      padding: 15px;
       border: 2px solid var(--accent-color);
-      border-radius: 10px;
+      border-radius: 12px;
       min-width: 160px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
       text-align: center;
       z-index: 10;
+      backdrop-filter: blur(10px);
     }
 
     .score-row { 
@@ -230,6 +232,70 @@
       box-shadow: 0 0 0 3px rgba(255, 204, 102, 0.2);
     }
 
+    /* Tournament Button */
+    #tournament-button { 
+      position: absolute; 
+      left: 300px; 
+      top: 20px; 
+      background: var(--ui-bg); 
+      padding: 15px;
+      border: 2px solid var(--accent-color);
+      border-radius: 12px; 
+      font-size: 13px; 
+      color: var(--text-color);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      min-width: 160px;
+      text-align: center;
+      z-index: 10;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+    }
+
+
+
+    /* Tournament Info Panel */
+    #tournament-info { 
+      position: absolute; 
+      left: 300px; 
+      top: 20px; 
+      background: var(--ui-bg); 
+      padding: 15px;
+      border: 2px solid var(--accent-color);
+      border-radius: 12px; 
+      font-size: 13px; 
+      color: var(--text-color);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      min-width: 160px;
+      text-align: center;
+      z-index: 10;
+      display: none; /* Sakriveno dok se ne pokrene turnir */
+      backdrop-filter: blur(10px);
+    }
+
+    /* Tournament Button Styles - identični kao Semafor */
+    #tournament-button .score-row { 
+      margin: 4px 0; 
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    #tournament-button .timer-row { 
+      font-size: 13px; 
+      font-weight: bold; 
+      margin: 6px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #tournament-button .bonus-row { 
+      font-size: 11px; 
+      color: var(--accent-color);
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    /* Tournament info nema hover efekte - isti kao Semafor */
+
     /* Animations */
     @keyframes pulse {
       0% { transform: scale(1); }
@@ -261,21 +327,22 @@
         left: 10px;
         top: 10px;
         gap: 6px;
-        max-width: calc(100vw - 20px);
+        max-width: 120px;
       }
 
       button {
         padding: 8px 12px;
         font-size: 12px;
-        min-width: 60px;
+        min-width: 100px;
+        width: 100%;
       }
 
       #semafor {
         left: 50%;
         top: 10px;
         transform: translateX(-50%);
-        padding: 6px 10px;
-        min-width: 130px;
+        padding: 12px;
+        min-width: 140px;
       }
 
       .timer-row {
@@ -289,6 +356,18 @@
       }
       
       #ai-difficulty {
+        left: 20px;
+        top: 10px;
+        min-width: 140px;
+      }
+      
+      #tournament-button {
+        left: 20px;
+        top: 10px;
+        min-width: 140px;
+      }
+      
+      #tournament-info {
         left: 20px;
         top: 10px;
         min-width: 140px;
@@ -310,7 +389,7 @@
 
       button {
         width: 100%;
-        min-width: auto;
+        min-width: 100px;
       }
 
       #semafor {
@@ -330,8 +409,6 @@
     <button id="btnReset">Reset</button>
     <button id="btnPause">Pause</button>
     <button id="btnReplay">Replay</button>
-    <button id="btnTournament">Tournament</button>
-    <button id="btnTheme"><i class="fas fa-moon"></i></button>
   </div>
   
   <div id="semafor">
@@ -344,6 +421,19 @@
     <div class="bonus-row" id="bonusInfo"></div>
   </div>
 
+  <div id="tournament-button">
+    <div style="font-weight: bold; color: var(--accent-color); margin-bottom: 6px; font-size: 12px;">🏆 TOURNAMENT</div>
+    <div class="score-row">Click to start</div>
+    <div class="bonus-row">Tournament mode</div>
+  </div>
+
+  <div id="tournament-info">
+    <div style="font-weight: bold; color: var(--accent-color); margin-bottom: 6px; font-size: 12px;">🏆 TOURNAMENT</div>
+    <div style="font-size: 12px; color: var(--text-color);">
+      Game <span id="tournamentGame">0</span>/<span id="tournamentMax">5</span>
+    </div>
+  </div>
+
   <div id="stats">
     Moves: 0<br>
     Time: 0s<br>
@@ -352,12 +442,12 @@
 
   <div id="ai-difficulty">
     <div style="font-weight: bold; color: var(--accent-color); margin-bottom: 8px; font-size: 14px;">
-      <i class="fas fa-robot"></i> AI Difficulty
+      AI Difficulty
     </div>
     <select id="aiLevel">
-      <option value="easy">🤖 Easy</option>
-      <option value="medium" selected>⚡ Medium</option>
-      <option value="hard">🧠 Hard</option>
+      <option value="easy">Easy</option>
+      <option value="medium" selected>Medium</option>
+      <option value="hard">Hard</option>
     </select>
   </div>
 

@@ -268,11 +268,11 @@ class GameScene extends Phaser.Scene {
     const headerX = uiLeftWidth + gameAreaWidth / 2;
     const headerY = 60;
     
-    this.headerText = this.add.text(headerX, headerY, `Arena: ${this.boardNames[this.currentBoardIndex]} | Player: ${this.currentPlayer}`, { 
-      fontSize: '14px', 
-      color: '#ffffff',
-      fontFamily: 'Arial, sans-serif'
-    }).setOrigin(0.5);
+    // Header uklonjen - više ne prikazujemo Arena info
+    if (this.headerText) {
+      this.headerText.destroy();
+      this.headerText = null;
+    }
   }
 
   drawBoards() {
@@ -769,6 +769,11 @@ class GameScene extends Phaser.Scene {
     this.mode = m;
     this.resetTournament();
 
+    // Ako je tournament mode aktivan, prikaži tournament info
+    if (this.tournamentMode) {
+      this.showTournamentInfo();
+    }
+
     if (this.mode === 'AIvP') {
       setTimeout(()=> this.maybeTriggerAIMove(), 200);
     }
@@ -782,6 +787,9 @@ class GameScene extends Phaser.Scene {
     // Hide tournament info if not in tournament mode
     if (!this.tournamentMode) {
       this.hideTournamentInfo();
+    } else {
+      // Ako je tournament mode, ažuriraj tournament info
+      this.updateTournamentInfo();
     }
   }
 
@@ -931,6 +939,7 @@ class GameScene extends Phaser.Scene {
     
     console.log('Starting tournament mode');
     this.showTournamentInfo();
+    this.updateTournamentInfo();
     this.startNextTournamentGame();
   }
 
@@ -942,6 +951,9 @@ class GameScene extends Phaser.Scene {
 
     this.tournamentGames++;
     console.log(`Tournament game ${this.tournamentGames}/${this.maxTournamentGames}`);
+    
+    // Ažuriraj tournament info
+    this.updateTournamentInfo();
     
     // Reset for new game
     this.resetTournament();
@@ -955,6 +967,9 @@ class GameScene extends Phaser.Scene {
     
     console.log(`Game ${this.tournamentGames} ended. Winner: ${winner}`);
     console.log(`Tournament score: X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`);
+    
+    // Ažuriraj tournament info
+    this.updateTournamentInfo();
     
     // Show game result
     this.showTournamentGameResult(winner);
@@ -1003,40 +1018,46 @@ class GameScene extends Phaser.Scene {
     }
     
     gameOverDiv.style.display = 'block';
+    
+    // Sakrij tournament info i prikaži dugme
+    this.hideTournamentInfo();
   }
 
   showTournamentInfo() {
-    // Create tournament info overlay - pozicioniramo u centru iznad tabla
-    if (!this.tournamentInfo) {
-      const canvasWidth = 1200;
-      const uiLeftWidth = 250;
-      const uiRightWidth = 220;
-      const gameAreaWidth = canvasWidth - uiLeftWidth - uiRightWidth;
-      const infoX = uiLeftWidth + gameAreaWidth / 2;
-      const infoY = 100;
-      
-      this.tournamentInfo = this.add.rectangle(infoX, infoY, 400, 80, 0x000000, 0.8);
-      this.tournamentText = this.add.text(infoX, infoY, '', { 
-        fontSize: '16px', 
-        color: '#ffffff',
-        fontFamily: 'Arial, sans-serif'
-      }).setOrigin(0.5);
+    // Sakrij dugme i prikaži tournament info panel
+    const tournamentButton = document.getElementById('tournament-button');
+    const tournamentInfo = document.getElementById('tournament-info');
+    
+    if (tournamentButton) {
+      tournamentButton.style.display = 'none';
+    }
+    if (tournamentInfo) {
+      tournamentInfo.style.display = 'block';
     }
     this.updateTournamentInfo();
   }
 
   updateTournamentInfo() {
-    if (this.tournamentInfo && this.tournamentText) {
-      this.tournamentText.setText(`Tournament: Game ${this.tournamentGames}/${this.maxTournamentGames}\nX: ${this.tournamentScore.X} | O: ${this.tournamentScore.O}`);
+    // Ažuriraj HTML tournament info panel
+    const tournamentGame = document.getElementById('tournamentGame');
+    const tournamentMax = document.getElementById('tournamentMax');
+    
+    if (tournamentGame && tournamentMax) {
+      tournamentGame.textContent = this.tournamentGames;
+      tournamentMax.textContent = this.maxTournamentGames;
     }
   }
 
   hideTournamentInfo() {
-    if (this.tournamentInfo) {
-      this.tournamentInfo.destroy();
-      this.tournamentText.destroy();
-      this.tournamentInfo = null;
-      this.tournamentText = null;
+    // Prikaži dugme i sakrij tournament info panel
+    const tournamentButton = document.getElementById('tournament-button');
+    const tournamentInfo = document.getElementById('tournament-info');
+    
+    if (tournamentButton) {
+      tournamentButton.style.display = 'block';
+    }
+    if (tournamentInfo) {
+      tournamentInfo.style.display = 'none';
     }
   }
 }
