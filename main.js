@@ -14,7 +14,7 @@ if (typeof GameScene === 'undefined') {
 
 const config = {
   type: Phaser.AUTO,
-  backgroundColor: 0x0f1720,
+  backgroundColor: 0x0a0a0a,
   width: 1200,
   height: 900,
   parent: 'game-container',
@@ -97,14 +97,21 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // AI difficulty selector
-  const aiLevelSelect = document.getElementById('aiLevel');
-  aiLevelSelect.onchange = () => {
-    const s = game.scene.keys['GameScene'];
-    if (s) {
-      s.setAIDifficulty(aiLevelSelect.value);
-    }
-  };
+  // AI difficulty buttons
+  const aiButtons = document.querySelectorAll('.ai-btn');
+  aiButtons.forEach(btn => {
+    btn.onclick = () => {
+      // Remove active class from all buttons
+      aiButtons.forEach(b => b.classList.remove('active'));
+      // Add active class to clicked button
+      btn.classList.add('active');
+      
+      const s = game.scene.keys['GameScene'];
+      if (s) {
+        s.setAIDifficulty(btn.dataset.level);
+      }
+    };
+  });
 
   // Tournament button click handler
   const tournamentButton = document.getElementById('tournament-button');
@@ -120,5 +127,11 @@ window.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  // Theme toggle uklonjen
+  // New Game button handler
+  const btnNewGame = document.getElementById('btnNewGame');
+  if (btnNewGame) {
+    btnNewGame.onclick = () => {
+      location.reload();
+    };
+  }
 });

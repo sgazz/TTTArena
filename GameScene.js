@@ -157,7 +157,7 @@ class GameScene extends Phaser.Scene {
   }
 
   animateCriticalTimer() {
-    const timerElement = document.getElementById(this.currentPlayer === 'X' ? 'timerX' : 'timerO');
+    const timerElement = document.getElementById(this.currentPlayer === 'X' ? 'timeX' : 'timeO');
     if (timerElement) {
       timerElement.style.color = '#ff4444';
       timerElement.style.fontWeight = 'bold';
@@ -175,8 +175,8 @@ class GameScene extends Phaser.Scene {
   updateSemafor() {
     document.getElementById('scoreX').textContent = this.score.X;
     document.getElementById('scoreO').textContent = this.score.O;
-    document.getElementById('timerX').textContent = this.timers.X;
-    document.getElementById('timerO').textContent = this.timers.O;
+    document.getElementById('timeX').textContent = this.formatTime(this.timers.X);
+    document.getElementById('timeO').textContent = this.formatTime(this.timers.O);
     
     // Update tournament info if in tournament mode
     if (this.tournamentMode) {
@@ -208,6 +208,12 @@ class GameScene extends Phaser.Scene {
     }
   }
 
+  formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  }
+
   onTimeOut() {
     this.gameActive = false;
     const winner = this.currentPlayer === 'X' ? 'O' : 'X';
@@ -222,17 +228,21 @@ class GameScene extends Phaser.Scene {
   showGameOver(winner, reason) {
     const gameOverDiv = document.getElementById('gameOver');
     const title = document.getElementById('gameOverTitle');
-    const result = document.getElementById('gameOverResult');
+    const reasonElement = document.getElementById('gameOverReason');
+    const scoreElement = document.getElementById('gameOverScore');
     
     if (reason === 'timeout') {
       title.textContent = 'Game Over - Time Out!';
-      result.textContent = `${winner} wins! ${winner} had ${this.timers[winner]}s remaining. Final score - X: ${this.score.X}, O: ${this.score.O}`;
+      reasonElement.textContent = `${winner} wins! ${winner} had ${this.formatTime(this.timers[winner])} remaining.`;
+      scoreElement.textContent = `Final score - X: ${this.score.X}, O: ${this.score.O}`;
     } else if (reason === 'draw') {
       title.textContent = 'Game Over - Draw!';
-      result.textContent = `Game ended in a draw! Final score - X: ${this.score.X}, O: ${this.score.O}`;
+      reasonElement.textContent = `Game ended in a draw!`;
+      scoreElement.textContent = `Final score - X: ${this.score.X}, O: ${this.score.O}`;
     } else {
       title.textContent = 'Game Over';
-      result.textContent = `${winner} wins! Final score - X: ${this.score.X}, O: ${this.score.O}`;
+      reasonElement.textContent = `${winner} wins!`;
+      scoreElement.textContent = `Final score - X: ${this.score.X}, O: ${this.score.O}`;
     }
     
     // Animate Game Over screen
@@ -262,11 +272,11 @@ class GameScene extends Phaser.Scene {
     if (this.headerText) this.headerText.destroy();
     // Pozicioniramo header u centru iznad tabla
     const canvasWidth = 1200;
-    const uiLeftWidth = 250;
+    const uiLeftWidth = 220;
     const uiRightWidth = 220;
     const gameAreaWidth = canvasWidth - uiLeftWidth - uiRightWidth;
     const headerX = uiLeftWidth + gameAreaWidth / 2;
-    const headerY = 60;
+    const headerY = 80;
     
     // Header uklonjen - više ne prikazujemo Arena info
     if (this.headerText) {
@@ -280,9 +290,9 @@ class GameScene extends Phaser.Scene {
     // Centriramo table u canvas-u, ostavljajući prostor za UI elemente
     const canvasWidth = 1200;
     const canvasHeight = 900;
-    const uiTopHeight = 100; // Prostor za gornje UI elemente (Semafor iznad tabla)
-    const uiBottomHeight = 80; // Prostor za donje UI elemente
-    const uiLeftWidth = 250; // Prostor za levi UI
+    const uiTopHeight = 120; // Prostor za gornje UI elemente (Semafor iznad tabla)
+    const uiBottomHeight = 50; // Prostor za donje UI elemente
+    const uiLeftWidth = 220; // Prostor za levi UI
     const uiRightWidth = 220; // Prostor za desni UI
     
     const gameAreaWidth = canvasWidth - uiLeftWidth - uiRightWidth;
@@ -310,11 +320,11 @@ class GameScene extends Phaser.Scene {
       console.log(`Board ${b}: r=${r}, c=${c}, x0=${x0}, y0=${y0}`);
 
       // Background - veći kvadrat
-      const bg = this.add.rectangle(x0 + miniSize/2, y0 + miniSize/2, miniSize + 20, miniSize + 20, 0x1f2937).setStrokeStyle(2, 0x334155);
+      const bg = this.add.rectangle(x0 + miniSize/2, y0 + miniSize/2, miniSize + 20, miniSize + 20, 0x050505).setStrokeStyle(2, 0x00ff41);
       this.boardGroup.add(bg);
 
       // Highlight active board - veći kvadrat
-      const highlight = this.add.rectangle(x0 + miniSize/2, y0 + miniSize/2, miniSize + 26, miniSize + 26).setStrokeStyle(3, 0xffff66);
+      const highlight = this.add.rectangle(x0 + miniSize/2, y0 + miniSize/2, miniSize + 26, miniSize + 26).setStrokeStyle(3, 0x00ff41);
       highlight.setVisible(b === this.currentBoardIndex && !this.boardFinished[b]);
       this.boardGroup.add(highlight);
 
@@ -328,17 +338,17 @@ class GameScene extends Phaser.Scene {
         for (let col=0; col<3; col++){
           const cx = x0 + gridOffsetX + col * (this.cellSize + this.cellSpacing) + this.cellSize/2;
           const cy = y0 + gridOffsetY + row * (this.cellSize + this.cellSpacing) + this.cellSize/2;
-          const rect = this.add.rectangle(cx, cy, this.cellSize, this.cellSize, 0x0b1220).setStrokeStyle(1, 0x475569);
-          const txt = this.add.text(cx, cy, this.boards[b][row*3+col] || '', { fontSize: '16px', color: '#e2e8f0', fontFamily: 'Arial, sans-serif' }).setOrigin(0.5);
+          const rect = this.add.rectangle(cx, cy, this.cellSize, this.cellSize, 0x0a0a0a).setStrokeStyle(1, 0x00ff41);
+          const txt = this.add.text(cx, cy, this.boards[b][row*3+col] || '', { fontSize: '16px', color: '#00ff41', fontFamily: 'Orbitron, monospace', fontStyle: 'bold' }).setOrigin(0.5);
           cells.push({ rect, txt, index: row*3+col, cx, cy });
         }
       }
 
       // Board name - herojsko ime - centriran iznad većeg background kvadrata
-      const label = this.add.text(x0 + (miniSize + 20)/2, y0 - 22, this.boardNames[b], { fontSize: '12px', color: '#ffcc66', fontFamily: 'Arial, sans-serif', fontStyle: 'bold' }).setOrigin(0.5);
+      const label = this.add.text(x0 + (miniSize + 20)/2, y0 - 22, this.boardNames[b], { fontSize: '12px', color: '#00ff41', fontFamily: 'Orbitron, monospace', fontStyle: 'bold' }).setOrigin(0.5);
 
       // Winner indicator - manji font - centriran u gornjem desnom uglu većeg background kvadrata
-      const winnerStamp = this.add.text(x0 + miniSize + 5, y0 - 15, this.boardWinners[b] ? this.boardWinners[b] : '', { fontSize: '12px', color: '#ffcc66', fontFamily: 'Arial, sans-serif' }).setOrigin(0.5);
+      const winnerStamp = this.add.text(x0 + miniSize + 5, y0 - 15, this.boardWinners[b] ? this.boardWinners[b] : '', { fontSize: '12px', color: '#00ff41', fontFamily: 'Orbitron, monospace', fontStyle: 'bold' }).setOrigin(0.5);
 
       this.minis.push({
         x0, y0, bg, highlight, cells, label, winnerStamp, index: b
@@ -363,10 +373,10 @@ class GameScene extends Phaser.Scene {
         c.txt.setText(this.boards[b][c.index] || '');
         if (this.boardFinished[b]) {
           c.txt.setAlpha(0.45);
-          c.rect.setFillStyle(0x071022, 1);
+          c.rect.setFillStyle(0x050505, 1);
         } else {
           c.txt.setAlpha(1);
-          c.rect.setFillStyle(0x0b1220, 1);
+          c.rect.setFillStyle(0x0a0a0a, 1);
         }
       });
     }
@@ -868,15 +878,7 @@ class GameScene extends Phaser.Scene {
     this.stats.totalTime = elapsedTime;
     this.stats.averageTimePerMove = this.stats.totalMoves > 0 ? elapsedTime / this.stats.totalMoves : 0;
     
-    // Update stats display if it exists
-    const statsElement = document.getElementById('stats');
-    if (statsElement) {
-      statsElement.innerHTML = `
-        Moves: ${this.stats.totalMoves}<br>
-        Time: ${Math.floor(elapsedTime)}s<br>
-        Avg: ${this.stats.averageTimePerMove.toFixed(1)}s/move
-      `;
-    }
+    // Stats panel removed - no longer updating UI
   }
 
   startReplay() {
@@ -988,13 +990,16 @@ class GameScene extends Phaser.Scene {
   showTournamentGameResult(winner) {
     const gameOverDiv = document.getElementById('gameOver');
     const title = document.getElementById('gameOverTitle');
-    const result = document.getElementById('gameOverResult');
+    const reasonElement = document.getElementById('gameOverReason');
+    const scoreElement = document.getElementById('gameOverScore');
     
     title.textContent = `Game ${this.tournamentGames} Complete`;
     if (winner === 'D') {
-      result.textContent = `Game ${this.tournamentGames} ended in a draw! Tournament score - X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`;
+      reasonElement.textContent = `Game ${this.tournamentGames} ended in a draw!`;
+      scoreElement.textContent = `Tournament score - X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`;
     } else {
-      result.textContent = `${winner} wins game ${this.tournamentGames}! Tournament score - X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`;
+      reasonElement.textContent = `${winner} wins game ${this.tournamentGames}!`;
+      scoreElement.textContent = `Tournament score - X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`;
     }
     
     gameOverDiv.style.display = 'block';
@@ -1013,13 +1018,16 @@ class GameScene extends Phaser.Scene {
     
     const gameOverDiv = document.getElementById('gameOver');
     const title = document.getElementById('gameOverTitle');
-    const result = document.getElementById('gameOverResult');
+    const reasonElement = document.getElementById('gameOverReason');
+    const scoreElement = document.getElementById('gameOverScore');
     
     title.textContent = 'Tournament Complete!';
     if (winner === 'Tie') {
-      result.textContent = `Tournament ended in a tie! Final score - X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`;
+      reasonElement.textContent = `Tournament ended in a tie!`;
+      scoreElement.textContent = `Final score - X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`;
     } else {
-      result.textContent = `${winner} wins the tournament! Final score - X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`;
+      reasonElement.textContent = `${winner} wins the tournament!`;
+      scoreElement.textContent = `Final score - X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`;
     }
     
     gameOverDiv.style.display = 'block';
@@ -1044,12 +1052,14 @@ class GameScene extends Phaser.Scene {
 
   updateTournamentInfo() {
     // Ažuriraj HTML tournament info panel
-    const tournamentGame = document.getElementById('tournamentGame');
-    const tournamentMax = document.getElementById('tournamentMax');
+    const tournamentProgress = document.getElementById('tournamentProgress');
+    const tournamentStatus = document.getElementById('tournamentStatus');
     
-    if (tournamentGame && tournamentMax) {
-      tournamentGame.textContent = this.tournamentGames;
-      tournamentMax.textContent = this.maxTournamentGames;
+    if (tournamentProgress) {
+      tournamentProgress.textContent = `${this.tournamentGames}/${this.maxTournamentGames}`;
+    }
+    if (tournamentStatus) {
+      tournamentStatus.textContent = this.tournamentMode ? 'Active' : 'Ready';
     }
   }
 

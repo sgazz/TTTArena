@@ -7,28 +7,19 @@
   <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+    
     :root {
-      --bg-color: #0f1720;
-      --ui-bg: #1a1a1a;
-      --border-color: #333;
-      --text-color: #eee;
-      --accent-color: #ffcc66;
-      --button-bg: #333;
-      --button-hover: #444;
-      --cell-bg: #0b1220;
-      --cell-border: #475569;
-    }
-
-    :root[data-theme="light"] {
-      --bg-color: #f8f9fa;
-      --ui-bg: #ffffff;
-      --border-color: #dee2e6;
-      --text-color: #212529;
-      --accent-color: #007bff;
-      --button-bg: #6c757d;
-      --button-hover: #5a6268;
-      --cell-bg: #e9ecef;
-      --cell-border: #adb5bd;
+      --crt-green: #00ff41;
+      --crt-green-glow: #00ff41;
+      --crt-green-dim: #00cc33;
+      --crt-green-dark: #00802a;
+      --crt-bg: #0a0a0a;
+      --crt-bg-dark: #050505;
+      --crt-scanline: rgba(0, 255, 65, 0.1);
+      --crt-glow: 0 0 10px var(--crt-green), 0 0 20px var(--crt-green), 0 0 30px var(--crt-green);
+      --crt-text-glow: 0 0 5px var(--crt-green), 0 0 10px var(--crt-green);
+      --crt-border-glow: 0 0 15px var(--crt-green), 0 0 25px var(--crt-green);
     }
 
     * {
@@ -37,17 +28,65 @@
 
     body { 
       margin: 0; 
-      background: var(--bg-color); 
-      color: var(--text-color); 
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--crt-bg);
+      color: var(--crt-green);
+      font-family: 'Orbitron', monospace;
       overflow: hidden;
+      position: relative;
+    }
+
+    /* CRT Scanlines Effect */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        transparent 50%, 
+        var(--crt-scanline) 50%
+      );
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 1000;
+      animation: scanlines 0.1s linear infinite;
+    }
+
+    @keyframes scanlines {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(4px); }
+    }
+
+    /* CRT Flicker Effect */
+    body::after {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(
+        circle at center,
+        transparent 0%,
+        rgba(0, 255, 65, 0.02) 50%,
+        transparent 100%
+      );
+      pointer-events: none;
+      z-index: 999;
+      animation: flicker 0.15s infinite;
+    }
+
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.95; }
     }
 
     /* UI Container */
     #ui { 
       position: absolute; 
-      left: 20px; 
-      top: 20px; 
+      left: 30px; 
+      top: 30px; 
       z-index: 10;
       display: flex;
       flex-direction: column;
@@ -57,351 +96,399 @@
 
     button { 
       padding: 8px 12px; 
-      background: var(--button-bg); 
-      color: var(--text-color); 
-      border: 1px solid var(--border-color); 
-      border-radius: 6px;
+      background: var(--crt-bg-dark);
+      color: var(--crt-green);
+      border: 2px solid var(--crt-green);
+      border-radius: 0;
       cursor: pointer;
-      font-size: 12px;
-      font-weight: 500;
-      transition: all 0.2s ease;
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
       min-width: 100px;
       width: 100%;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--crt-glow);
+    }
+
+    button::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, var(--crt-green), transparent);
+      transition: left 0.5s;
     }
 
     button:hover { 
-      background: var(--button-hover); 
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      background: var(--crt-green-dark);
+      color: var(--crt-bg-dark);
+      box-shadow: var(--crt-border-glow);
+      transform: translateY(-2px);
+    }
+
+    button:hover::before {
+      left: 100%;
     }
 
     button:active {
       transform: translateY(0);
+      box-shadow: 0 0 5px var(--crt-green);
     }
 
     /* Semafor Panel */
     #semafor { 
       position: absolute; 
-      /* Pozicioniramo iznad table #2 (srednja tabla u gornjem redu) */
-      left: 600px;
-      top: 20px; 
+      left: 50%;
+      top: 30px; 
       transform: translateX(-50%);
-      background: var(--ui-bg);
-      padding: 15px;
-      border: 2px solid var(--accent-color);
-      border-radius: 12px;
-      min-width: 160px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      background: var(--crt-bg-dark);
+      padding: 15px 25px;
+      border: 3px solid var(--crt-green);
+      border-radius: 0;
+      min-width: 400px;
+      box-shadow: var(--crt-border-glow);
       text-align: center;
       z-index: 10;
-      backdrop-filter: blur(10px);
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      text-shadow: var(--crt-text-glow);
     }
 
-    .score-row { 
-      margin: 4px 0; 
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    .timer-row { 
-      font-size: 13px; 
-      font-weight: bold; 
-      margin: 6px 0;
+    .semafor-content {
       display: flex;
-      justify-content: space-between;
-    }
-
-    .bonus-row { 
-      font-size: 11px; 
-      color: var(--accent-color);
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      width: 100%;
       text-align: center;
-      margin-top: 6px;
     }
 
-    /* Game Container */
-    #game-container { 
-      position: absolute; 
-      top: 0; 
-      left: 0; 
-      z-index: 1; 
-    }
-
-    /* Game Over Modal */
-    #gameOver { 
-      position: absolute; 
-      top: 50%; 
-      left: 50%; 
-      transform: translate(-50%, -50%);
-      background: var(--ui-bg);
-      padding: 40px;
-      border: 2px solid var(--accent-color);
-      border-radius: 12px;
+    .player { 
+      font-weight: 900;
+      color: var(--crt-green);
+      font-size: 20px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      min-width: 20px;
       text-align: center;
-      display: none;
-      z-index: 100;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-      min-width: 300px;
     }
 
-    #gameOver h2 {
-      margin: 0 0 20px 0;
-      color: var(--accent-color);
-      font-size: 24px;
+    .score { 
+      font-weight: 700;
+      color: var(--crt-green-dim);
+      font-size: 18px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      min-width: 20px;
+      text-align: center;
     }
 
-    #gameOver p {
-      margin: 0 0 25px 0;
-      line-height: 1.5;
+    .separator {
+      font-weight: 700;
+      color: var(--crt-green);
+      font-size: 18px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin: 0 5px;
+      min-width: 15px;
+      text-align: center;
     }
 
-    #gameOver button {
-      background: var(--accent-color);
-      color: var(--bg-color);
-      border: none;
-      padding: 12px 24px;
-      font-weight: bold;
+    .time { 
+      font-weight: 700;
+      color: var(--crt-green);
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      min-width: 35px;
+      text-align: center;
     }
 
-    #gameOver button:hover {
-      background: #ffd700;
+    .time.critical { 
+      color: #ff0040;
+      text-shadow: 0 0 10px #ff0040, 0 0 20px #ff0040;
+      animation: critical-blink 0.5s infinite;
     }
 
-    /* Stats Panel */
-    #stats { 
-      position: absolute; 
-      left: 20px; 
-      bottom: 20px; 
-      background: var(--ui-bg); 
-      padding: 12px; 
-      border: 1px solid var(--border-color); 
-      border-radius: 8px; 
-      font-size: 12px; 
-      color: #aaa;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    @keyframes critical-blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0.3; }
+    }
+
+    .bonus-info { 
+      font-size: 14px;
+      color: var(--crt-green-dim);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      animation: bonus-pulse 2s infinite;
       min-width: 100px;
+      text-align: center;
+    }
+
+    @keyframes bonus-pulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
     }
 
     /* AI Difficulty Panel */
     #ai-difficulty { 
       position: absolute; 
-      left: 750px; 
-      top: 20px; 
-      background: var(--ui-bg); 
-      padding: 15px; 
-      border: 2px solid var(--accent-color);
-      border-radius: 12px; 
-      font-size: 13px; 
-      color: var(--text-color);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      right: 30px;
+      top: 30px; 
+      background: var(--crt-bg-dark);
+      padding: 15px;
+      border: 3px solid var(--crt-green);
+      border-radius: 0;
       min-width: 160px;
+      box-shadow: var(--crt-border-glow);
       text-align: center;
-      backdrop-filter: blur(10px);
-      transition: all 0.3s ease;
       z-index: 10;
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      text-shadow: var(--crt-text-glow);
     }
 
-    #ai-difficulty:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.5);
-      border-color: #ffd700;
+    #ai-difficulty h3 { 
+      margin: 0 0 10px 0;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--crt-green);
     }
 
-    #ai-difficulty select {
-      background: var(--button-bg);
-      color: var(--text-color);
-      border: 2px solid var(--accent-color);
-      border-radius: 8px;
-      padding: 8px 12px;
-      margin-top: 8px;
-      font-size: 13px;
-      font-weight: 500;
+    .ai-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .ai-btn {
+      background: var(--crt-bg-dark);
+      color: var(--crt-green);
+      border: 2px solid var(--crt-green);
+      border-radius: 0;
+      padding: 5px 8px;
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
       cursor: pointer;
-      transition: all 0.2s ease;
-      width: 100%;
-      text-align: center;
+      box-shadow: var(--crt-glow);
+      transition: all 0.3s ease;
+      min-width: 80px;
     }
 
-    #ai-difficulty select:hover {
-      border-color: #ffd700;
-      background: var(--button-hover);
+    .ai-btn:hover {
+      background: var(--crt-green-dark);
+      color: var(--crt-bg-dark);
+      box-shadow: var(--crt-border-glow);
     }
 
-    #ai-difficulty select:focus {
-      outline: none;
-      border-color: #ffd700;
-      box-shadow: 0 0 0 3px rgba(255, 204, 102, 0.2);
+    .ai-btn.active {
+      background: var(--crt-green);
+      color: var(--crt-bg-dark);
+      box-shadow: var(--crt-border-glow);
     }
 
     /* Tournament Button */
     #tournament-button { 
       position: absolute; 
-      left: 300px; 
-      top: 20px; 
-      background: var(--ui-bg); 
+      left: 30px;
+      top: 200px; 
+      background: var(--crt-bg-dark);
       padding: 15px;
-      border: 2px solid var(--accent-color);
-      border-radius: 12px; 
-      font-size: 13px; 
-      color: var(--text-color);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      border: 3px solid var(--crt-green);
+      border-radius: 0;
       min-width: 160px;
+      height: 80px;
+      box-shadow: var(--crt-border-glow);
       text-align: center;
       z-index: 10;
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      text-shadow: var(--crt-text-glow);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       cursor: pointer;
-      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
     }
 
+    #tournament-button:hover {
+      background: var(--crt-green-dark);
+      color: var(--crt-bg-dark);
+      box-shadow: var(--crt-border-glow);
+    }
 
+    #tournament-button h3 { 
+      margin: 0 0 5px 0;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--crt-green);
+    }
 
-    /* Tournament Info Panel */
+    #tournament-button .status { 
+      font-size: 10px;
+      color: var(--crt-green-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Tournament Info */
     #tournament-info { 
       position: absolute; 
-      left: 300px; 
-      top: 20px; 
-      background: var(--ui-bg); 
+      left: 30px;
+      top: 300px; 
+      background: var(--crt-bg-dark);
       padding: 15px;
-      border: 2px solid var(--accent-color);
-      border-radius: 12px; 
-      font-size: 13px; 
-      color: var(--text-color);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      border: 3px solid var(--crt-green);
+      border-radius: 0;
       min-width: 160px;
+      height: 80px;
+      box-shadow: var(--crt-border-glow);
       text-align: center;
       z-index: 10;
-      display: none; /* Sakriveno dok se ne pokrene turnir */
-      backdrop-filter: blur(10px);
-    }
-
-    /* Tournament Button Styles - identični kao Semafor */
-    #tournament-button .score-row { 
-      margin: 4px 0; 
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    #tournament-button .timer-row { 
-      font-size: 13px; 
-      font-weight: bold; 
-      margin: 6px 0;
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      text-shadow: var(--crt-text-glow);
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+      justify-content: center;
     }
 
-    #tournament-button .bonus-row { 
-      font-size: 11px; 
-      color: var(--accent-color);
+    #tournament-info h3 { 
+      margin: 0 0 5px 0;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--crt-green);
+    }
+
+    #tournament-info .progress { 
+      font-size: 10px;
+      color: var(--crt-green-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Game Over Modal */
+    #gameOver { 
+      position: fixed; 
+      top: 50%; 
+      left: 50%; 
+      transform: translate(-50%, -50%);
+      background: var(--crt-bg-dark);
+      padding: 30px;
+      border: 4px solid var(--crt-green);
+      border-radius: 0;
+      box-shadow: var(--crt-border-glow);
       text-align: center;
-      margin-top: 6px;
+      z-index: 100;
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      text-shadow: var(--crt-text-glow);
+      min-width: 300px;
     }
 
-    /* Tournament info nema hover efekte - isti kao Semafor */
-
-    /* Animations */
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); }
+    #gameOver h2 { 
+      margin: 0 0 20px 0;
+      font-size: 24px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--crt-green);
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
+    #gameOver p { 
+      margin: 10px 0;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--crt-green-dim);
     }
 
-    @keyframes slideIn {
-      from { transform: translateX(-100%); }
-      to { transform: translateX(0); }
+    #gameOver button { 
+      margin-top: 20px;
+      min-width: 120px;
+    }
+
+
+
+    /* Pause Overlay */
+    #pauseOverlay { 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      text-shadow: var(--crt-text-glow);
+    }
+
+    #pauseOverlay h2 { 
+      font-size: 48px;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      color: var(--crt-green);
+      animation: pause-blink 1s infinite;
+    }
+
+    @keyframes pause-blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0.3; }
+    }
+
+    /* Game Container */
+    #game-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
     }
 
     /* Responsive Design */
     @media (max-width: 1200px) {
-      /* Za manje ekrane, smanjujemo canvas */
-      #game-container canvas {
-        max-width: 100vw;
-        max-height: 100vh;
-      }
+      #semafor { left: 50%; transform: translateX(-50%); }
+      #ai-difficulty { right: 20px; top: 120px; }
+      #tournament-button { left: 20px; top: 200px; }
+      #tournament-info { left: 20px; top: 300px; }
     }
 
     @media (max-width: 768px) {
-      #ui {
-        left: 10px;
-        top: 10px;
-        gap: 6px;
-        max-width: 120px;
-      }
-
-      button {
-        padding: 8px 12px;
-        font-size: 12px;
-        min-width: 100px;
-        width: 100%;
-      }
-
-      #semafor {
-        left: 50%;
-        top: 10px;
-        transform: translateX(-50%);
-        padding: 12px;
-        min-width: 140px;
-      }
-
-      .timer-row {
-        font-size: 14px;
-      }
-
-      #stats {
-        left: 10px;
-        bottom: 10px;
-        width: auto;
-      }
-      
-      #ai-difficulty {
-        left: 20px;
-        top: 10px;
-        min-width: 140px;
-      }
-      
-      #tournament-button {
-        left: 20px;
-        top: 10px;
-        min-width: 140px;
-      }
-      
-      #tournament-info {
-        left: 20px;
-        top: 10px;
-        min-width: 140px;
-      }
-
-      #gameOver {
-        left: 20px;
-        right: 20px;
-        transform: translateY(-50%);
-        min-width: auto;
-      }
-    }
-
-    @media (max-width: 480px) {
-      #ui {
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      button {
-        width: 100%;
-        min-width: 100px;
-      }
-
-      #semafor {
-        position: relative;
-        margin: 10px auto;
-        width: calc(100% - 20px);
-        max-width: 200px;
-      }
+      #ui { left: 10px; top: 10px; max-width: 100px; }
+      button { font-size: 10px; padding: 6px 8px; min-width: 80px; }
+      #semafor { left: 50%; transform: translateX(-50%); min-width: 320px; padding: 10px 20px; }
+      #ai-difficulty { right: 10px; top: 100px; min-width: 140px; padding: 10px; }
+      #tournament-button { left: 10px; top: 180px; min-width: 140px; padding: 10px; height: 70px; }
+      #tournament-info { left: 10px; top: 270px; min-width: 140px; padding: 10px; height: 70px; }
+      .semafor-content { gap: 10px; }
+      .player { font-size: 18px; }
+      .score { font-size: 16px; }
+      .separator { font-size: 16px; margin: 0 4px; }
+      .time { font-size: 14px; }
+      .bonus-info { font-size: 12px; min-width: 80px; }
+      .ai-btn { font-size: 8px; padding: 4px 6px; }
     }
   </style>
 </head>
 <body>
+  <div id="game-container"></div>
+  
   <div id="ui">
     <button id="btnPvP">PvP</button>
     <button id="btnPvAI">PvAI</button>
@@ -410,53 +497,50 @@
     <button id="btnPause">Pause</button>
     <button id="btnReplay">Replay</button>
   </div>
-  
+
   <div id="semafor">
-    <div style="font-weight: bold; color: var(--accent-color); margin-bottom: 6px; font-size: 12px;">⚡ SEMAFOR</div>
-    <div class="score-row">X: <span id="scoreX">0</span> | O: <span id="scoreO">0</span></div>
-    <div class="timer-row">
-      <div>X: <span id="timerX">60</span>s</div>
-      <div>O: <span id="timerO">60</span>s</div>
+    <div class="semafor-content">
+      <span class="player">X</span>
+      <span class="score" id="scoreX">0</span>
+      <span class="time" id="timeX">0:00</span>
+      <span class="separator">:</span>
+      <span class="time" id="timeO">0:00</span>
+      <span class="score" id="scoreO">0</span>
+      <span class="player">O</span>
+      <span class="bonus-info" id="bonusInfo"></span>
     </div>
-    <div class="bonus-row" id="bonusInfo"></div>
-  </div>
-
-  <div id="tournament-button">
-    <div style="font-weight: bold; color: var(--accent-color); margin-bottom: 6px; font-size: 12px;">🏆 TOURNAMENT</div>
-    <div class="score-row">Click to start</div>
-    <div class="bonus-row">Tournament mode</div>
-  </div>
-
-  <div id="tournament-info">
-    <div style="font-weight: bold; color: var(--accent-color); margin-bottom: 6px; font-size: 12px;">🏆 TOURNAMENT</div>
-    <div style="font-size: 12px; color: var(--text-color);">
-      Game <span id="tournamentGame">0</span>/<span id="tournamentMax">5</span>
-    </div>
-  </div>
-
-  <div id="stats">
-    Moves: 0<br>
-    Time: 0s<br>
-    Avg: 0.0s/move
   </div>
 
   <div id="ai-difficulty">
-    <div style="font-weight: bold; color: var(--accent-color); margin-bottom: 8px; font-size: 14px;">
-      AI Difficulty
+    <h3>AI Level</h3>
+    <div class="ai-buttons">
+      <button class="ai-btn" data-level="easy">Easy</button>
+      <button class="ai-btn active" data-level="medium">Medium</button>
+      <button class="ai-btn" data-level="hard">Hard</button>
     </div>
-    <select id="aiLevel">
-      <option value="easy">Easy</option>
-      <option value="medium" selected>Medium</option>
-      <option value="hard">Hard</option>
-    </select>
   </div>
 
-  <div id="game-container"></div>
+  <div id="tournament-button">
+    <h3>Tournament</h3>
+    <div class="status" id="tournamentStatus">Ready</div>
+  </div>
 
-  <div id="gameOver">
+  <div id="tournament-info">
+    <h3>Progress</h3>
+    <div class="progress" id="tournamentProgress">0/5</div>
+  </div>
+
+
+
+  <div id="gameOver" style="display: none;">
     <h2 id="gameOverTitle">Game Over</h2>
-    <p id="gameOverResult"></p>
-    <button onclick="location.reload()">New Game</button>
+    <p id="gameOverReason"></p>
+    <p id="gameOverScore"></p>
+    <button id="btnNewGame">New Game</button>
+  </div>
+
+  <div id="pauseOverlay">
+    <h2>PAUSED</h2>
   </div>
 
   <script src="GameScene.js"></script>
