@@ -1,73 +1,73 @@
 # XO Arena - Tournament Game
 
-Web igra sa 9 tabla za XO (Tic-Tac-Toe) turnir koristeći Phaser.js framework sa timer sistemom.
+Web-based game with 9 boards for XO (Tic-Tac-Toe) tournament using Phaser.js framework with timer system.
 
-## Ključna pravila
+## Key Rules
 
-### 1. 9 nezavisnih tabli koje se igraju u krugu
-- Igra se odvija na 9 mini tabla organizovanih u 3x3 grid
-- X → O → sledeća tabla (kružno kretanje)
+### 1. 9 independent boards played in rotation
+- Game takes place on 9 mini boards organized in a 3x3 grid
+- X → O → next board (circular movement)
 
-### 2. Reset table nakon pobede
-- **Pobednik** → tabla se briše i na njoj počinje novi meč
-- **Gubitnik** → igra prvi u novoj partiji na toj tabli
-- **Nerešeno** → X igra prvi u novoj partiji
+### 2. Board reset after victory
+- **Winner** → board is cleared and a new match starts on it
+- **Loser** → plays first in the new match on that board
+- **Draw** → X plays first in the new match
 
-### 3. Timer sistem kao u šahu
-- **Start**: 1 minut po igraču
-- **Pobeda**: +15 sekundi pobedniku, -10 sekundi gubitniku
-- **Nerešeno**: +5 sekundi obojici
-- **Pobednik**: Onaj kome nije isteklo vreme
+### 3. Chess-like timer system
+- **Start**: 1 minute per player
+- **Victory**: +15 seconds to winner, -10 seconds to loser
+- **Draw**: +5 seconds to both players
+- **Winner**: The one who doesn't run out of time
 
-### 4. Modovi igre
-- **PvP**: Čovek protiv čoveka
-- **PvAI**: Čovek (X) protiv AI (O)
-- **AIvP**: AI (X) protiv čoveka (O)
+### 4. Game modes
+- **PvP**: Human vs Human
+- **PvAI**: Human (X) vs AI (O)
+- **AIvP**: AI (X) vs Human (O)
 
-## Funkcionalnosti
+## Features
 
-- **9 tabla**: Mini XO igre u 3x3 grid-u
-- **Timer sistem**: Šahovski timer sa bonus/penalty sistemom
-- **Reset sistema**: Nakon pobede tabla se resetuje
-- **AI protivnik**: Pametan AI koji traži pobedničke poteze
-- **Animacije**: Blinkanje pobedničkih ćelija
-- **Semafor**: Prikaz rezultata, vremena i bonus/penalty sekundi
-- **Game Over ekran**: Finalni rezultat turnira
+- **9 boards**: Mini XO games in 3x3 grid
+- **Timer system**: Chess timer with bonus/penalty system
+- **Reset system**: Board resets after victory
+- **AI opponent**: Smart AI that looks for winning moves
+- **Animations**: Blinking winning cells
+- **Scoreboard**: Display of results, time and bonus/penalty seconds
+- **Game Over screen**: Final tournament result
 
-## Kako igrati
+## How to Play
 
-1. Otvorite `index.html` u web browseru
-2. Izaberite mod igre (PvP, PvAI, AIvP)
-3. Kliknite na aktivnu tablu (označenu žutom bojom)
-4. Postavite X ili O u praznu ćeliju
-5. Nakon pobede na tabli, tabla se resetuje i gubitnik igra prvi
-6. Turnir se završava kada jednom od igrača istekne vreme
-7. Pobednik je onaj kome nije isteklo vreme
+1. Open `index.html` in a web browser
+2. Choose game mode (PvP, PvAI, AIvP)
+3. Click on the active board (marked in yellow)
+4. Place X or O in an empty cell
+5. After victory on a board, the board resets and the loser plays first
+6. Tournament ends when one player runs out of time
+7. Winner is the one who doesn't run out of time
 
-## Kontrole
+## Controls
 
-- **PvP**: Prebacivanje između modova igre
-- **PvAI**: Igrajte kao X protiv AI-a
-- **AIvP**: AI igra kao X protiv vas
-- **Reset**: Resetuje trenutni turnir
+- **PvP**: Switch between game modes
+- **PvAI**: Play as X against AI
+- **AIvP**: AI plays as X against you
+- **Reset**: Reset current tournament
 
-## Tehnologije
+## Technologies
 
 - **Phaser.js 3**: Game framework
 - **HTML5 Canvas**: Rendering
 - **Vanilla JavaScript**: Game logic
 
-## Struktura fajlova
+## File Structure
 
-- `index.html` - Glavni HTML fajl sa UI-om i semaforom
-- `main.js` - Phaser konfiguracija i UI kontrole
-- `GameScene.js` - Glavna logika igre sa timer sistemom
-- `ai.js` - AI algoritam za protivnika
-- `README.md` - Uputstva za igru
+- `index.html` - Main HTML file with UI and scoreboard
+- `main.js` - Phaser configuration and UI controls
+- `GameScene.js` - Main game logic with timer system
+- `ai.js` - AI algorithm for opponent
+- `README.md` - Game instructions
 
-## Zvukovi i animacije
+## Sounds and Animations
 
-- **Zvukovi**: Placeholder za move, win, draw zvukove
-- **Animacije**: Blinkanje pobedničkih ćelija (4 puta)
-- **Semafor**: Bonus/penalty info blinka 1 sekundu
-- **Game Over**: Modal sa finalnim rezultatom
+- **Sounds**: Placeholder for move, win, draw sounds
+- **Animations**: Blinking winning cells (4 times)
+- **Scoreboard**: Bonus/penalty info blinks for 1 second
+- **Game Over**: Modal with final result
