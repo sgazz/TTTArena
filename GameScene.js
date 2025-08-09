@@ -1,0 +1,982 @@
+class GameScene extends Phaser.Scene {
+  constructor() {
+    super({ key: 'GameScene' });
+
+    // Game state
+    this.BOARD_COUNT = 9;
+    this.boards = [];
+    this.boardFinished = [];
+    this.boardWinners = Array(9).fill(null);
+    this.currentBoardIndex = 0;
+    this.currentPlayer = 'X';
+    this.mode = 'PvP';
+    this.cellSize = 80;
+    this.cellSpacing = 10;
+    this.minis = [];
+    this.score = { X: 0, O: 0 };
+    
+    // Timer system
+    this.timers = { X: 60, O: 60 };
+    this.timerEvent = null;
+    this.gameActive = false;
+    
+    // Semafor system
+    this.lastBonus = null;
+    
+    // Animation system
+    this.winningCells = [];
+    this.blinkTween = null;
+    
+    // Pause system
+    this.isPaused = false;
+    
+    // Game statistics
+    this.stats = {
+      totalMoves: 0,
+      totalTime: 0,
+      averageTimePerMove: 0
+    };
+    
+    // Replay system
+    this.moveHistory = [];
+    this.isReplaying = false;
+    this.replayIndex = 0;
+    
+    // AI difficulty
+    this.aiDifficulty = 'medium';
+    
+    // Tournament system
+    this.tournamentMode = false;
+    this.tournamentGames = 0;
+    this.tournamentScore = { X: 0, O: 0 };
+    this.maxTournamentGames = 5;
+  }
+
+  create() {
+    console.log('GameScene create() called');
+    
+    this.initState();
+    console.log('State initialized');
+    this.drawBoards();
+    console.log('Boards drawn');
+    this.drawHeader();
+    console.log('Header drawn');
+    this.updateSemafor();
+    console.log('Semafor updated');
+    
+    // Don't start timer immediately - wait for first move
+    this.gameActive = false;
+    console.log('Game ready - waiting for first move');
+
+    this.input.on('pointerdown', (pointer) => {
+      this.handlePointer(pointer);
+    });
+
+    // Add hover effects for boards
+    this.input.on('pointerover', (pointer) => {
+      this.handlePointerOver(pointer);
+    });
+
+    this.input.on('pointerout', (pointer) => {
+      this.handlePointerOut(pointer);
+    });
+
+    // Keyboard controls
+    this.input.keyboard.on('keydown-SPACE', () => {
+      this.togglePause();
+    });
+
+    this.input.keyboard.on('keydown-R', () => {
+      this.resetTournament();
+    });
+
+    if (this.mode === 'AIvP') {
+      this.maybeTriggerAIMove();
+    }
+  }
+
+  initState() {
+    this.boards = [];
+    this.boardFinished = [];
+    this.boardWinners = Array(this.BOARD_COUNT).fill(null);
+    this.minis = [];
+    this.currentBoardIndex = 0;
+    this.currentPlayer = 'X';
+    this.score = { X: 0, O: 0 };
+    this.timers = { X: 60, O: 60 };
+    this.gameActive = true;
+    this.lastBonus = null;
+    this.winningCells = [];
+
+    for (let i=0;i<this.BOARD_COUNT;i++){
+      this.boards.push(Array(9).fill(null));
+      this.boardFinished.push(false);
+    }
+  }
+
+  startTimer() {
+    if (this.timerEvent) {
+      this.timerEvent.destroy();
+    }
+    
+    this.timerEvent = this.time.addEvent({
+      delay: 1000,
+      callback: this.updateTimer,
+      callbackScope: this,
+      loop: true
+    });
+  }
+
+  updateTimer() {
+    if (!this.gameActive || this.isPaused) return;
+    
+    this.timers[this.currentPlayer] -= 1;
+    this.updateSemafor();
+    
+    // Animate timer when critical (< 10s)
+    if (this.timers[this.currentPlayer] <= 10 && this.timers[this.currentPlayer] > 0) {
+      this.animateCriticalTimer();
+    }
+    
+    if (this.timers[this.currentPlayer] <= 0) {
+      this.onTimeOut();
+    }
+  }
+
+  animateCriticalTimer() {
+    const timerElement = document.getElementById(this.currentPlayer === 'X' ? 'timerX' : 'timerO');
+    if (timerElement) {
+      timerElement.style.color = '#ff4444';
+      timerElement.style.fontWeight = 'bold';
+      
+      // Pulse animation
+      timerElement.style.animation = 'pulse 0.5s ease-in-out';
+      
+      // Reset animation after 0.5s
+      setTimeout(() => {
+        timerElement.style.animation = '';
+      }, 500);
+    }
+  }
+
+  updateSemafor() {
+    document.getElementById('scoreX').textContent = this.score.X;
+    document.getElementById('scoreO').textContent = this.score.O;
+    document.getElementById('timerX').textContent = this.timers.X;
+    document.getElementById('timerO').textContent = this.timers.O;
+    
+    // Update tournament info if in tournament mode
+    if (this.tournamentMode) {
+      this.updateTournamentInfo();
+    }
+    
+    if (this.lastBonus) {
+      const bonusElement = document.getElementById('bonusInfo');
+      bonusElement.textContent = this.lastBonus;
+      
+      // Animate bonus info
+      bonusElement.style.color = '#ffcc66';
+      bonusElement.style.fontWeight = 'bold';
+      bonusElement.style.fontSize = '14px';
+      
+      // Clear bonus info after 1 second with fade effect
+      setTimeout(() => {
+        bonusElement.style.transition = 'opacity 0.5s';
+        bonusElement.style.opacity = '0';
+        setTimeout(() => {
+          bonusElement.textContent = '';
+          bonusElement.style.opacity = '1';
+          bonusElement.style.color = '#aaa';
+          bonusElement.style.fontWeight = 'normal';
+          bonusElement.style.fontSize = '12px';
+          this.lastBonus = null;
+        }, 500);
+      }, 1000);
+    }
+  }
+
+  onTimeOut() {
+    this.gameActive = false;
+    const winner = this.currentPlayer === 'X' ? 'O' : 'X';
+    
+    if (this.tournamentMode) {
+      this.handleTournamentGameEnd(winner);
+    } else {
+      this.onGameComplete(winner);
+    }
+  }
+
+  showGameOver(winner, reason) {
+    const gameOverDiv = document.getElementById('gameOver');
+    const title = document.getElementById('gameOverTitle');
+    const result = document.getElementById('gameOverResult');
+    
+    if (reason === 'timeout') {
+      title.textContent = 'Game Over - Time Out!';
+      result.textContent = `${winner} wins! ${winner} had ${this.timers[winner]}s remaining. Final score - X: ${this.score.X}, O: ${this.score.O}`;
+    } else if (reason === 'draw') {
+      title.textContent = 'Game Over - Draw!';
+      result.textContent = `Game ended in a draw! Final score - X: ${this.score.X}, O: ${this.score.O}`;
+    } else {
+      title.textContent = 'Game Over';
+      result.textContent = `${winner} wins! Final score - X: ${this.score.X}, O: ${this.score.O}`;
+    }
+    
+    // Animate Game Over screen
+    gameOverDiv.style.display = 'block';
+    gameOverDiv.style.opacity = '0';
+    gameOverDiv.style.transform = 'translate(-50%, -50%) scale(0.8)';
+    
+    // Fade in and scale up
+    setTimeout(() => {
+      gameOverDiv.style.transition = 'all 0.5s ease-out';
+      gameOverDiv.style.opacity = '1';
+      gameOverDiv.style.transform = 'translate(-50%, -50%) scale(1)';
+    }, 100);
+  }
+
+  onGameComplete(winner) {
+    this.gameActive = false;
+    
+    if (winner === 'D') {
+      this.showGameOver('D', 'draw');
+    } else {
+      this.showGameOver(winner, 'complete');
+    }
+  }
+
+  drawHeader() {
+    if (this.headerText) this.headerText.destroy();
+    this.headerText = this.add.text(18, 18, `Board: ${this.currentBoardIndex+1} | Player: ${this.currentPlayer}`, { fontSize: '20px', color: '#ffffff' });
+  }
+
+  drawBoards() {
+    console.log('Drawing boards...');
+    const startX = 100, startY = 100;
+    const miniSize = this.cellSize*3 + this.cellSpacing*2;
+    console.log(`Board positions: startX=${startX}, startY=${startY}, miniSize=${miniSize}`);
+    
+    if (this.boardGroup) {
+      this.boardGroup.clear(true);
+    }
+    this.boardGroup = this.add.group();
+
+    for (let b = 0; b < this.BOARD_COUNT; b++) {
+      const r = Math.floor(b / 3);
+      const c = b % 3;
+      const x0 = startX + c * (miniSize + 24);
+      const y0 = startY + r * (miniSize + 24);
+      console.log(`Board ${b}: r=${r}, c=${c}, x0=${x0}, y0=${y0}`);
+
+      // Background
+      const bg = this.add.rectangle(x0 + miniSize/2, y0 + miniSize/2, miniSize, miniSize, 0x1f2937).setStrokeStyle(2, 0x334155);
+      this.boardGroup.add(bg);
+
+      // Highlight active board
+      const highlight = this.add.rectangle(x0 + miniSize/2, y0 + miniSize/2, miniSize+6, miniSize+6).setStrokeStyle(3, 0xffff66);
+      highlight.setVisible(b === this.currentBoardIndex);
+      this.boardGroup.add(highlight);
+
+      // Cells
+      const cells = [];
+      for (let row=0; row<3; row++){
+        for (let col=0; col<3; col++){
+          const cx = x0 + col * (this.cellSize + this.cellSpacing) + this.cellSize/2 + 6;
+          const cy = y0 + row * (this.cellSize + this.cellSpacing) + this.cellSize/2 + 6;
+          const rect = this.add.rectangle(cx, cy, this.cellSize, this.cellSize, 0x0b1220).setStrokeStyle(1, 0x475569);
+          const txt = this.add.text(cx, cy, this.boards[b][row*3+col] || '', { fontSize: '22px', color: '#e2e8f0' }).setOrigin(0.5);
+          cells.push({ rect, txt, index: row*3+col, cx, cy });
+        }
+      }
+
+      // Board number
+      const label = this.add.text(x0 + 6, y0 - 18, `#${b+1}`, { fontSize: '14px', color: '#cbd5e1' });
+
+      // Winner indicator
+      const winnerStamp = this.add.text(x0 + miniSize - 34, y0 - 18, this.boardWinners[b] ? this.boardWinners[b] : '', { fontSize: '14px', color: '#ffcc66' });
+
+      this.minis.push({
+        x0, y0, bg, highlight, cells, label, winnerStamp, index: b
+      });
+    }
+
+    this.updateBoardsVisual();
+  }
+
+  updateBoardsVisual() {
+    // Check if boards are drawn
+    if (!this.minis || this.minis.length === 0) {
+      console.log('Boards not drawn yet, skipping updateBoardsVisual');
+      return;
+    }
+    
+    for (let b=0;b<this.BOARD_COUNT;b++){
+      const mini = this.minis[b];
+      mini.highlight.setVisible(b === this.currentBoardIndex && !this.boardFinished[b]);
+      mini.winnerStamp.setText(this.boardWinners[b] ? this.boardWinners[b] : '');
+      mini.cells.forEach(c => {
+        c.txt.setText(this.boards[b][c.index] || '');
+        if (this.boardFinished[b]) {
+          c.txt.setAlpha(0.45);
+          c.rect.setFillStyle(0x071022, 1);
+        } else {
+          c.txt.setAlpha(1);
+          c.rect.setFillStyle(0x0b1220, 1);
+        }
+      });
+    }
+    this.drawHeader();
+  }
+
+  handlePointer(pointer) {
+    for (let mini of this.minis) {
+      if (this.boardFinished[mini.index]) continue;
+      if (mini.index !== this.currentBoardIndex) continue;
+
+      for (let c of mini.cells) {
+        const bounds = c.rect.getBounds();
+        if (Phaser.Geom.Rectangle.Contains(bounds, pointer.x, pointer.y)) {
+          this.onCellClick(mini.index, c.index);
+          return;
+        }
+      }
+    }
+  }
+
+  handlePointerOver(pointer) {
+    for (let mini of this.minis) {
+      if (this.boardFinished[mini.index]) continue;
+      if (mini.index !== this.currentBoardIndex) continue;
+
+      for (let c of mini.cells) {
+        const bounds = c.rect.getBounds();
+        if (Phaser.Geom.Rectangle.Contains(bounds, pointer.x, pointer.y)) {
+          // Hover effect - scale up cell
+          this.tweens.add({
+            targets: c.rect,
+            scaleX: 1.05,
+            scaleY: 1.05,
+            duration: 100,
+            ease: 'Power2'
+          });
+          return;
+        }
+      }
+    }
+  }
+
+  handlePointerOut(pointer) {
+    for (let mini of this.minis) {
+      if (this.boardFinished[mini.index]) continue;
+      if (mini.index !== this.currentBoardIndex) continue;
+
+      for (let c of mini.cells) {
+        const bounds = c.rect.getBounds();
+        if (Phaser.Geom.Rectangle.Contains(bounds, pointer.x, pointer.y)) {
+          // Reset hover effect
+          this.tweens.add({
+            targets: c.rect,
+            scaleX: 1,
+            scaleY: 1,
+            duration: 100,
+            ease: 'Power2'
+          });
+          return;
+        }
+      }
+    }
+  }
+
+  onCellClick(boardIndex, cellIndex) {
+    if (this.boardFinished[boardIndex]) return;
+    const board = this.boards[boardIndex];
+    if (board[cellIndex]) return;
+
+    // Start timer on first move
+    if (!this.gameActive) {
+      this.gameActive = true;
+      this.startTimer();
+      console.log('Timer started on first move');
+    }
+
+    // Update statistics
+    this.stats.totalMoves++;
+    this.updateStats();
+    
+    // Record move for replay
+    this.moveHistory.push({
+      boardIndex: boardIndex,
+      cellIndex: cellIndex,
+      player: this.currentPlayer,
+      timestamp: Date.now()
+    });
+
+    // Play move sound
+    this.playSound('move');
+
+    board[cellIndex] = this.currentPlayer;
+    
+    // Animate the placed move
+    const mini = this.minis[boardIndex];
+    const cell = mini.cells[cellIndex];
+    if (cell && cell.rect) {
+      // Pulse animation for placed move
+      this.tweens.add({
+        targets: cell.rect,
+        scaleX: 1.1,
+        scaleY: 1.1,
+        duration: 150,
+        yoyo: true,
+        ease: 'Power2'
+      });
+    }
+    
+    this.updateBoardsVisual();
+
+    const winner = this.checkBoardWinner(board);
+    if (winner) {
+      this.handleBoardWin(boardIndex, winner);
+    } else if (!board.includes(null)) {
+      this.handleBoardDraw(boardIndex);
+    } else {
+      // X → O → sledeća tabla
+      this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
+      this.advanceToNextBoard();
+      this.updateBoardsVisual();
+    }
+
+    this.maybeTriggerAIMove();
+  }
+
+  advanceToNextBoard() {
+    if (this.boardFinished.every(x=>x)) return;
+    let c = this.currentBoardIndex;
+    for (let i=0;i<this.BOARD_COUNT;i++){
+      c = (c + 1) % this.BOARD_COUNT;
+      if (!this.boardFinished[c]) {
+        // Animate board transition
+        this.animateBoardTransition(this.currentBoardIndex, c);
+        this.currentBoardIndex = c;
+        return;
+      }
+    }
+  }
+
+  animateBoardTransition(fromBoard, toBoard) {
+    // Fade out current board highlight
+    const fromMini = this.minis[fromBoard];
+    if (fromMini && fromMini.highlight) {
+      this.tweens.add({
+        targets: fromMini.highlight,
+        alpha: 0.3,
+        duration: 200,
+        ease: 'Power2'
+      });
+    }
+
+    // Fade in new board highlight
+    const toMini = this.minis[toBoard];
+    if (toMini && toMini.highlight) {
+      this.tweens.add({
+        targets: toMini.highlight,
+        alpha: 1,
+        duration: 300,
+        ease: 'Power2',
+        delay: 200
+      });
+    }
+  }
+
+  handleBoardWin(boardIndex, winner) {
+    this.boardFinished[boardIndex] = true;
+    this.boardWinners[boardIndex] = winner;
+    this.score[winner] += 1;
+    
+    // Play win sound
+    this.playSound('win');
+    
+    // Animate winning cells
+    this.animateWinningCells(boardIndex, winner);
+    
+    // Animate score update
+    this.animateScoreUpdate(winner);
+    
+    // Timer adjustments
+    this.timers[winner] += 15;
+    this.timers[winner === 'X' ? 'O' : 'X'] -= 10;
+    
+    // Update semafor
+    this.lastBonus = `${winner} +15s, ${winner === 'X' ? 'O' : 'X'} -10s`;
+    this.updateSemafor();
+    
+    // Check if all boards are finished (game complete)
+    if (this.boardFinished.every(f => f)) {
+      if (this.tournamentMode) {
+        this.handleTournamentGameEnd(winner);
+      } else {
+        this.onGameComplete(winner);
+      }
+    } else {
+      // Reset board immediately - loser plays first
+      this.resetBoard(boardIndex, winner === 'X' ? 'O' : 'X');
+    }
+  }
+
+  handleBoardDraw(boardIndex) {
+    this.boardFinished[boardIndex] = true;
+    this.boardWinners[boardIndex] = 'D';
+    
+    // Play draw sound
+    this.playSound('draw');
+    
+    // Timer adjustments for draw
+    this.timers.X += 5;
+    this.timers.O += 5;
+    
+    // Update semafor
+    this.lastBonus = 'Draw: X +5s, O +5s';
+    this.updateSemafor();
+    
+    // Check if all boards are finished (game complete)
+    if (this.boardFinished.every(f => f)) {
+      if (this.tournamentMode) {
+        this.handleTournamentGameEnd('D'); // Draw
+      } else {
+        this.onGameComplete('D'); // Draw
+      }
+    } else {
+      // Reset board immediately - X starts after draw
+      this.resetBoard(boardIndex, 'X');
+    }
+  }
+
+  animateWinningCells(boardIndex, winner) {
+    const winningCombo = this.getWinningCombo(this.boards[boardIndex], winner);
+    if (!winningCombo) return;
+
+    const mini = this.minis[boardIndex];
+    this.winningCells = winningCombo.map(index => mini.cells[index].rect);
+
+    // Create winning line
+    this.drawWinningLine(boardIndex, winningCombo);
+
+    // Blink animation
+    this.blinkTween = this.tweens.add({
+      targets: this.winningCells,
+      alpha: 0,
+      duration: 200,
+      yoyo: true,
+      repeat: 4,
+      onComplete: () => {
+        this.winningCells.forEach(cell => cell.setAlpha(1));
+        this.winningCells = [];
+        // Remove winning line
+        if (this.winningLine) {
+          this.winningLine.destroy();
+          this.winningLine = null;
+        }
+      }
+    });
+  }
+
+  drawWinningLine(boardIndex, winningCombo) {
+    const mini = this.minis[boardIndex];
+    if (!mini) return;
+
+    // Calculate line position based on winning combo
+    const [a, b, c] = winningCombo;
+    const cellA = mini.cells[a];
+    const cellC = mini.cells[c];
+
+    if (cellA && cellC) {
+      const startX = cellA.cx;
+      const startY = cellA.cy;
+      const endX = cellC.cx;
+      const endY = cellC.cy;
+
+      // Create line graphics
+      this.winningLine = this.add.graphics();
+      this.winningLine.lineStyle(4, 0xffcc66, 1);
+      this.winningLine.beginPath();
+      this.winningLine.moveTo(startX, startY);
+      this.winningLine.lineTo(endX, endY);
+      this.winningLine.strokePath();
+
+      // Animate line drawing
+      this.tweens.add({
+        targets: this.winningLine,
+        alpha: 0,
+        duration: 800,
+        delay: 400,
+        ease: 'Power2'
+      });
+    }
+  }
+
+  animateScoreUpdate(winner) {
+    const scoreElement = document.getElementById(winner === 'X' ? 'scoreX' : 'scoreO');
+    if (scoreElement) {
+      // Scale up and change color
+      scoreElement.style.transform = 'scale(1.2)';
+      scoreElement.style.color = '#ffcc66';
+      scoreElement.style.fontWeight = 'bold';
+      
+      // Reset after animation
+      setTimeout(() => {
+        scoreElement.style.transform = 'scale(1)';
+        scoreElement.style.color = '';
+        scoreElement.style.fontWeight = '';
+      }, 500);
+    }
+  }
+
+  getWinningCombo(board, winner) {
+    const wins = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+    
+    for (let combo of wins) {
+      const [a,b,c] = combo;
+      if (board[a] === winner && board[b] === winner && board[c] === winner) {
+        return combo;
+      }
+    }
+    return null;
+  }
+
+  resetBoard(boardIndex, firstPlayer) {
+    // Animate board reset
+    const mini = this.minis[boardIndex];
+    if (mini) {
+      // Fade out all cells
+      mini.cells.forEach(cell => {
+        if (cell.rect) {
+          this.tweens.add({
+            targets: cell.rect,
+            alpha: 0.3,
+            duration: 200,
+            ease: 'Power2'
+          });
+        }
+      });
+      
+      // After fade out, reset and fade in
+      this.time.delayedCall(200, () => {
+        this.boards[boardIndex] = Array(9).fill(null);
+        this.boardFinished[boardIndex] = false;
+        this.boardWinners[boardIndex] = null;
+        
+        this.currentPlayer = firstPlayer;
+        this.updateBoardsVisual();
+        
+        // Fade in all cells
+        mini.cells.forEach(cell => {
+          if (cell.rect) {
+            this.tweens.add({
+              targets: cell.rect,
+              alpha: 1,
+              duration: 200,
+              ease: 'Power2'
+            });
+          }
+        });
+        
+        this.maybeTriggerAIMove();
+      });
+    } else {
+      // Fallback if animation fails
+      this.boards[boardIndex] = Array(9).fill(null);
+      this.boardFinished[boardIndex] = false;
+      this.boardWinners[boardIndex] = null;
+      
+      this.currentPlayer = firstPlayer;
+      this.updateBoardsVisual();
+      
+      this.maybeTriggerAIMove();
+    }
+  }
+
+  checkBoardWinner(board) {
+    const wins = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+    for (let combo of wins){
+      const [a,b,c] = combo;
+      if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+        return board[a];
+      }
+    }
+    return null;
+  }
+
+  playSound(type) {
+    // Placeholder for sound effects
+    // In real implementation, you would load and play actual sound files
+    console.log(`Playing ${type} sound`);
+  }
+
+  setMode(m) {
+    console.log(`Setting mode to: ${m}`);
+    this.mode = m;
+    this.resetTournament();
+
+    if (this.mode === 'AIvP') {
+      setTimeout(()=> this.maybeTriggerAIMove(), 200);
+    }
+  }
+
+  resetTournament() {
+    this.initState();
+    this.drawBoards();
+    this.startTimer();
+    
+    // Hide tournament info if not in tournament mode
+    if (!this.tournamentMode) {
+      this.hideTournamentInfo();
+    }
+  }
+
+  maybeTriggerAIMove() {
+    if (this.isPaused) return;
+    
+    const aiIsX = (this.mode === 'AIvP');
+    const aiIsO = (this.mode === 'PvAI');
+
+    const aiTurn = (aiIsX && this.currentPlayer === 'X') || (aiIsO && this.currentPlayer === 'O');
+    if (!aiTurn) return;
+
+    this.time.delayedCall(300, () => {
+      if (this.isPaused) return;
+      
+      const board = this.boards[this.currentBoardIndex];
+      if (this.boardFinished[this.currentBoardIndex]) return;
+      
+      const move = TicTacToeAI.makeMove(board.slice(), this.currentPlayer, this.aiDifficulty);
+      if (move != null) {
+        this.onCellClick(this.currentBoardIndex, move);
+      }
+    });
+  }
+
+  togglePause() {
+    this.isPaused = !this.isPaused;
+    const btnPause = document.getElementById('btnPause');
+    if (btnPause) {
+      btnPause.textContent = this.isPaused ? 'Resume' : 'Pause';
+    }
+    
+    if (this.isPaused) {
+      // Add pause overlay
+      this.showPauseOverlay();
+    } else {
+      // Remove pause overlay
+      this.hidePauseOverlay();
+    }
+  }
+
+  showPauseOverlay() {
+    if (!this.pauseOverlay) {
+      this.pauseOverlay = this.add.rectangle(480, 360, 960, 720, 0x000000, 0.7);
+      this.pauseText = this.add.text(480, 360, 'PAUSED', { 
+        fontSize: '48px', 
+        color: '#ffffff',
+        fontStyle: 'bold'
+      }).setOrigin(0.5);
+    }
+  }
+
+  hidePauseOverlay() {
+    if (this.pauseOverlay) {
+      this.pauseOverlay.destroy();
+      this.pauseText.destroy();
+      this.pauseOverlay = null;
+      this.pauseText = null;
+    }
+  }
+
+  updateStats() {
+    const elapsedTime = 120 - (this.timers.X + this.timers.O); // 120 = 60+60 initial time
+    this.stats.totalTime = elapsedTime;
+    this.stats.averageTimePerMove = this.stats.totalMoves > 0 ? elapsedTime / this.stats.totalMoves : 0;
+    
+    // Update stats display if it exists
+    const statsElement = document.getElementById('stats');
+    if (statsElement) {
+      statsElement.innerHTML = `
+        Moves: ${this.stats.totalMoves}<br>
+        Time: ${Math.floor(elapsedTime)}s<br>
+        Avg: ${this.stats.averageTimePerMove.toFixed(1)}s/move
+      `;
+    }
+  }
+
+  startReplay() {
+    if (this.moveHistory.length === 0) {
+      console.log('No moves to replay');
+      return;
+    }
+
+    this.isReplaying = true;
+    this.replayIndex = 0;
+    
+    // Reset game state
+    this.resetTournament();
+    
+    // Start replay
+    this.playNextMove();
+  }
+
+  playNextMove() {
+    if (!this.isReplaying || this.replayIndex >= this.moveHistory.length) {
+      this.isReplaying = false;
+      console.log('Replay finished');
+      return;
+    }
+
+    const move = this.moveHistory[this.replayIndex];
+    
+    // Simulate the move
+    this.boards[move.boardIndex][move.cellIndex] = move.player;
+    this.currentBoardIndex = move.boardIndex;
+    this.currentPlayer = move.player;
+    
+    // Update visuals
+    this.updateBoardsVisual();
+    
+    // Check for win/draw
+    const winner = this.checkBoardWinner(this.boards[move.boardIndex]);
+    if (winner) {
+      this.handleBoardWin(move.boardIndex, winner);
+    } else if (!this.boards[move.boardIndex].includes(null)) {
+      this.handleBoardDraw(move.boardIndex);
+    } else {
+      this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
+      this.advanceToNextBoard();
+      this.updateBoardsVisual();
+    }
+    
+    this.replayIndex++;
+    
+    // Play next move after delay
+    this.time.delayedCall(1000, () => {
+      this.playNextMove();
+    });
+  }
+
+  setAIDifficulty(difficulty) {
+    this.aiDifficulty = difficulty;
+    console.log(`AI difficulty set to: ${difficulty}`);
+  }
+
+  startTournament() {
+    this.tournamentMode = true;
+    this.tournamentGames = 0;
+    this.tournamentScore = { X: 0, O: 0 };
+    
+    console.log('Starting tournament mode');
+    this.showTournamentInfo();
+    this.startNextTournamentGame();
+  }
+
+  startNextTournamentGame() {
+    if (this.tournamentGames >= this.maxTournamentGames) {
+      this.endTournament();
+      return;
+    }
+
+    this.tournamentGames++;
+    console.log(`Tournament game ${this.tournamentGames}/${this.maxTournamentGames}`);
+    
+    // Reset for new game
+    this.resetTournament();
+    this.gameActive = false; // Don't start timer until first move
+  }
+
+  handleTournamentGameEnd(winner) {
+    if (winner !== 'D') {
+      this.tournamentScore[winner]++;
+    }
+    
+    console.log(`Game ${this.tournamentGames} ended. Winner: ${winner}`);
+    console.log(`Tournament score: X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`);
+    
+    // Show game result
+    this.showTournamentGameResult(winner);
+    
+    // Start next game after delay
+    this.time.delayedCall(3000, () => {
+      this.startNextTournamentGame();
+    });
+  }
+
+  showTournamentGameResult(winner) {
+    const gameOverDiv = document.getElementById('gameOver');
+    const title = document.getElementById('gameOverTitle');
+    const result = document.getElementById('gameOverResult');
+    
+    title.textContent = `Game ${this.tournamentGames} Complete`;
+    if (winner === 'D') {
+      result.textContent = `Game ${this.tournamentGames} ended in a draw! Tournament score - X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`;
+    } else {
+      result.textContent = `${winner} wins game ${this.tournamentGames}! Tournament score - X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`;
+    }
+    
+    gameOverDiv.style.display = 'block';
+    
+    // Auto-hide after 2.5 seconds
+    setTimeout(() => {
+      gameOverDiv.style.display = 'none';
+    }, 2500);
+  }
+
+  endTournament() {
+    this.tournamentMode = false;
+    
+    const winner = this.tournamentScore.X > this.tournamentScore.O ? 'X' : 
+                   this.tournamentScore.O > this.tournamentScore.X ? 'O' : 'Tie';
+    
+    const gameOverDiv = document.getElementById('gameOver');
+    const title = document.getElementById('gameOverTitle');
+    const result = document.getElementById('gameOverResult');
+    
+    title.textContent = 'Tournament Complete!';
+    if (winner === 'Tie') {
+      result.textContent = `Tournament ended in a tie! Final score - X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`;
+    } else {
+      result.textContent = `${winner} wins the tournament! Final score - X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`;
+    }
+    
+    gameOverDiv.style.display = 'block';
+  }
+
+  showTournamentInfo() {
+    // Create tournament info overlay
+    if (!this.tournamentInfo) {
+      this.tournamentInfo = this.add.rectangle(480, 100, 400, 80, 0x000000, 0.8);
+      this.tournamentText = this.add.text(480, 100, '', { 
+        fontSize: '16px', 
+        color: '#ffffff'
+      }).setOrigin(0.5);
+    }
+    this.updateTournamentInfo();
+  }
+
+  updateTournamentInfo() {
+    if (this.tournamentInfo && this.tournamentText) {
+      this.tournamentText.setText(`Tournament: Game ${this.tournamentGames}/${this.maxTournamentGames}\nX: ${this.tournamentScore.X} | O: ${this.tournamentScore.O}`);
+    }
+  }
+
+  hideTournamentInfo() {
+    if (this.tournamentInfo) {
+      this.tournamentInfo.destroy();
+      this.tournamentText.destroy();
+      this.tournamentInfo = null;
+      this.tournamentText = null;
+    }
+  }
+}

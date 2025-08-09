@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>XO Arena</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+  <style>
+    body { 
+      margin: 0; 
+      background: #111; 
+      color: #eee; 
+      font-family: Arial, sans-serif;
+    }
+    #ui { 
+      position: absolute; 
+      left: 10px; 
+      top: 10px; 
+      z-index: 10; 
+    }
+    button { 
+      margin: 5px; 
+      padding: 8px 16px; 
+      background: #333; 
+      color: #fff; 
+      border: 1px solid #555; 
+      cursor: pointer;
+    }
+    button:hover { background: #444; }
+    #semafor { 
+      position: absolute; 
+      right: 10px; 
+      top: 10px; 
+      background: #1a1a1a;
+      padding: 10px;
+      border: 1px solid #333;
+      border-radius: 5px;
+    }
+    .score-row { margin: 5px 0; }
+    .timer-row { font-size: 18px; font-weight: bold; margin: 10px 0; }
+    .bonus-row { font-size: 12px; color: #aaa; }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    #game-container { 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      z-index: 1; 
+    }
+    #gameOver { 
+      position: absolute; 
+      top: 50%; 
+      left: 50%; 
+      transform: translate(-50%, -50%);
+      background: #000;
+      padding: 30px;
+      border: 2px solid #fff;
+      border-radius: 10px;
+      text-align: center;
+      display: none;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+  <div id="ui">
+    <button id="btnPvP">PvP</button>
+    <button id="btnPvAI">PvAI</button>
+    <button id="btnAIvP">AIvP</button>
+    <button id="btnReset">Reset</button>
+    <button id="btnPause">Pause</button>
+    <button id="btnReplay">Replay</button>
+    <button id="btnTournament">Tournament</button>
+  </div>
+  
+  <div id="semafor">
+    <div class="score-row">X: <span id="scoreX">0</span></div>
+    <div class="score-row">O: <span id="scoreO">0</span></div>
+    <div class="timer-row">
+      <div>X: <span id="timerX">60</span>s</div>
+      <div>O: <span id="timerO">60</span>s</div>
+    </div>
+    <div class="bonus-row" id="bonusInfo"></div>
+  </div>
+
+  <div id="stats" style="position: absolute; left: 10px; bottom: 10px; background: #1a1a1a; padding: 10px; border: 1px solid #333; border-radius: 5px; font-size: 12px; color: #aaa;">
+    Moves: 0<br>
+    Time: 0s<br>
+    Avg: 0.0s/move
+  </div>
+
+  <div id="ai-difficulty" style="position: absolute; right: 10px; bottom: 10px; background: #1a1a1a; padding: 10px; border: 1px solid #333; border-radius: 5px; font-size: 12px; color: #aaa;">
+    AI Difficulty: <select id="aiLevel">
+      <option value="easy">Easy</option>
+      <option value="medium" selected>Medium</option>
+      <option value="hard">Hard</option>
+    </select>
+  </div>
+
+  <div id="game-container"></div>
+
+  <div id="gameOver">
+    <h2 id="gameOverTitle">Game Over</h2>
+    <p id="gameOverResult"></p>
+    <button onclick="location.reload()">New Game</button>
+  </div>
+
+  <script src="GameScene.js"></script>
+  <script src="ai.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
