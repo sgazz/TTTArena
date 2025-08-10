@@ -1092,13 +1092,9 @@ class GameScene extends Phaser.Scene {
   updateTournamentInfo() {
     // Ažuriraj HTML tournament info panel
     const tournamentProgress = document.getElementById('tournamentProgress');
-    const tournamentStatus = document.getElementById('tournamentStatus');
     
     if (tournamentProgress) {
       tournamentProgress.textContent = `${this.tournamentGames}/${this.maxTournamentGames}`;
-    }
-    if (tournamentStatus) {
-      tournamentStatus.textContent = this.tournamentMode ? 'Active' : 'Ready';
     }
   }
 
@@ -1125,16 +1121,23 @@ class GameScene extends Phaser.Scene {
   updateTournamentButtonState(isActive) {
     const tournamentButton = document.getElementById('tournament-button');
     const btnStopTournament = document.getElementById('btnStopTournament');
+    const tournamentStatus = document.getElementById('tournamentStatus');
     
     if (tournamentButton) {
       if (isActive) {
         tournamentButton.classList.add('active');
         tournamentButton.classList.remove('disabled');
         tournamentButton.title = 'Tournament in progress (Ctrl+Shift+T to stop)';
+        if (tournamentStatus) {
+          tournamentStatus.textContent = 'Tournament Active';
+        }
       } else {
         tournamentButton.classList.remove('active');
         tournamentButton.classList.remove('disabled');
         tournamentButton.title = 'Start tournament mode (Ctrl+T)';
+        if (tournamentStatus) {
+          tournamentStatus.textContent = 'Play Tournament';
+        }
       }
     }
 

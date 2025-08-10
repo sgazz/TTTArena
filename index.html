@@ -341,20 +341,16 @@
       box-shadow: var(--crt-border-glow);
     }
 
-    /* Tournament Button */
+    /* Tournament Button - now part of UI panel */
     #tournament-button { 
-      position: absolute; 
-      left: 30px;
-      top: 200px; 
       background: var(--crt-bg-dark);
-      padding: 15px;
-      border: 3px solid var(--crt-green);
+      padding: 12px;
+      border: 2px solid var(--crt-green);
       border-radius: 0;
-      min-width: 160px;
-      height: 80px;
-      box-shadow: var(--crt-border-glow);
+      min-width: 100px;
+      width: 100%;
+      box-shadow: var(--crt-glow);
       text-align: center;
-      z-index: 10;
       font-family: 'Orbitron', monospace;
       font-weight: 700;
       text-shadow: var(--crt-text-glow);
@@ -363,6 +359,7 @@
       justify-content: center;
       cursor: pointer;
       transition: all 0.3s ease;
+      margin-top: 8px;
     }
 
     #tournament-button:hover {
@@ -371,29 +368,18 @@
       box-shadow: var(--crt-border-glow);
     }
 
-    #tournament-button h3 { 
-      margin: 0 0 5px 0;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--crt-green);
-    }
-
     #tournament-button .status { 
-      font-size: 10px;
-      color: var(--crt-green-dim);
+      font-size: 11px;
+      color: var(--crt-green);
       text-transform: uppercase;
       letter-spacing: 1px;
+      font-weight: 700;
     }
 
     #tournament-button.active {
       background: var(--crt-green-dark);
       border-color: var(--crt-green);
       box-shadow: var(--crt-border-glow);
-    }
-
-    #tournament-button.active h3 {
-      color: var(--crt-bg-dark);
     }
 
     #tournament-button.active .status {
@@ -412,38 +398,35 @@
       box-shadow: var(--crt-glow);
     }
 
-    /* Tournament Info */
+    /* Tournament Info - now part of UI panel */
     #tournament-info { 
-      position: absolute; 
-      left: 30px;
-      top: 300px; 
       background: var(--crt-bg-dark);
-      padding: 15px;
-      border: 3px solid var(--crt-green);
+      padding: 12px;
+      border: 2px solid var(--crt-green);
       border-radius: 0;
-      min-width: 160px;
-      height: 80px;
-      box-shadow: var(--crt-border-glow);
+      min-width: 100px;
+      width: 100%;
+      box-shadow: var(--crt-glow);
       text-align: center;
-      z-index: 10;
       font-family: 'Orbitron', monospace;
       font-weight: 700;
       text-shadow: var(--crt-text-glow);
       display: flex;
       flex-direction: column;
       justify-content: center;
+      margin-top: 8px;
     }
 
     #tournament-info h3 { 
       margin: 0 0 5px 0;
-      font-size: 12px;
+      font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 1px;
       color: var(--crt-green);
     }
 
     #tournament-info .progress { 
-      font-size: 10px;
+      font-size: 9px;
       color: var(--crt-green-dim);
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -505,6 +488,85 @@
       min-width: 120px;
     }
 
+    /* Custom Confirmation Modal */
+    #confirmModal { 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 300;
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      text-shadow: var(--crt-text-glow);
+    }
+
+    .confirm-content {
+      background: var(--crt-bg-dark);
+      padding: 30px;
+      border: 4px solid var(--crt-green);
+      border-radius: 0;
+      box-shadow: var(--crt-border-glow);
+      text-align: center;
+      min-width: 400px;
+      max-width: 500px;
+    }
+
+    .confirm-content h2 { 
+      margin: 0 0 20px 0;
+      font-size: 24px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--crt-green);
+    }
+
+    .confirm-content p { 
+      margin: 20px 0;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--crt-green-dim);
+      line-height: 1.4;
+    }
+
+    .confirm-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 25px;
+    }
+
+    .confirm-buttons button { 
+      min-width: 100px;
+      padding: 10px 15px;
+      font-size: 12px;
+    }
+
+    #btnConfirmYes {
+      background: var(--crt-green-dark);
+      border-color: var(--crt-green);
+    }
+
+    #btnConfirmYes:hover {
+      background: var(--crt-green);
+      color: var(--crt-bg-dark);
+    }
+
+    #btnConfirmNo {
+      background: var(--crt-bg-dark);
+      border-color: var(--crt-green-dim);
+      color: var(--crt-green-dim);
+    }
+
+    #btnConfirmNo:hover {
+      background: var(--crt-green-dim);
+      color: var(--crt-bg-dark);
+    }
+
 
 
     /* Pause Overlay */
@@ -524,17 +586,90 @@
       text-shadow: var(--crt-text-glow);
     }
 
+    .pause-content {
+      text-align: center;
+      background: var(--crt-bg-dark);
+      padding: 40px;
+      border: 4px solid var(--crt-green);
+      border-radius: 0;
+      box-shadow: var(--crt-border-glow);
+    }
+
     #pauseOverlay h2 { 
       font-size: 48px;
       text-transform: uppercase;
       letter-spacing: 4px;
       color: var(--crt-green);
       animation: pause-blink 1s infinite;
+      margin: 0 0 20px 0;
+    }
+
+    #pauseOverlay p {
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--crt-green-dim);
+      margin: 0;
+      animation: pause-pulse 2s infinite;
     }
 
     @keyframes pause-blink {
       0%, 50% { opacity: 1; }
       51%, 100% { opacity: 0.3; }
+    }
+
+    @keyframes pause-pulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+
+    /* Footer with Keyboard Shortcuts */
+    #footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: var(--crt-bg-dark);
+      border-top: 2px solid var(--crt-green);
+      box-shadow: var(--crt-border-glow);
+      z-index: 50;
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      text-shadow: var(--crt-text-glow);
+      padding: 8px 0;
+    }
+
+    .shortcuts-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .shortcut-item {
+      font-size: 10px;
+      color: var(--crt-green-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .key {
+      background: var(--crt-bg-dark);
+      border: 1px solid var(--crt-green);
+      border-radius: 2px;
+      padding: 1px 4px;
+      font-size: 9px;
+      color: var(--crt-green);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: var(--crt-glow);
     }
 
     /* Game Container */
@@ -551,8 +686,6 @@
     @media (max-width: 1200px) {
       #semafor { left: 50%; transform: translateX(-50%); }
       #ai-difficulty { right: 20px; top: 120px; }
-      #tournament-button { left: 20px; top: 200px; }
-      #tournament-info { left: 20px; top: 300px; }
     }
 
     @media (max-width: 768px) {
@@ -560,8 +693,6 @@
       button { font-size: 10px; padding: 6px 8px; min-width: 80px; }
       #semafor { left: 50%; transform: translateX(-50%); min-width: 320px; padding: 10px 20px; }
       #ai-difficulty { right: 10px; top: 100px; min-width: 140px; padding: 10px; }
-      #tournament-button { left: 10px; top: 180px; min-width: 140px; padding: 10px; height: 70px; }
-      #tournament-info { left: 10px; top: 270px; min-width: 140px; padding: 10px; height: 70px; }
       .semafor-content { gap: 10px; }
       .player { font-size: 18px; }
       .score { font-size: 16px; }
@@ -569,6 +700,12 @@
       .time { font-size: 14px; }
       .bonus-info { font-size: 12px; min-width: 80px; }
       .ai-btn { font-size: 8px; padding: 4px 6px; }
+      
+      /* Footer responsive */
+      #footer { padding: 6px 0; }
+      .shortcuts-container { padding: 0 10px; gap: 10px; }
+      .shortcut-item { font-size: 9px; }
+      .key { font-size: 8px; padding: 1px 3px; }
     }
   </style>
 </head>
@@ -583,6 +720,17 @@
     <button id="btnReset" title="Reset current game (Ctrl+R)">Reset</button>
     <button id="btnPause" title="Pause/Resume game (Space)">Pause</button>
     <button id="btnReplay" title="Replay last game moves" disabled>Replay</button>
+    
+    <!-- Tournament elements moved here -->
+    <div id="tournament-button" title="Start tournament mode (Ctrl+T)">
+      <div class="status" id="tournamentStatus">Play Tournament</div>
+    </div>
+
+    <div id="tournament-info">
+      <h3>Progress</h3>
+      <div class="progress" id="tournamentProgress">0/5</div>
+      <button id="btnStopTournament" title="Stop tournament (Ctrl+Shift+T)" style="display: none;">Stop</button>
+    </div>
   </div>
 
   <div id="semafor">
@@ -607,17 +755,6 @@
     </div>
   </div>
 
-  <div id="tournament-button" title="Start tournament mode (Ctrl+T)">
-    <h3>Tournament</h3>
-    <div class="status" id="tournamentStatus">Ready</div>
-  </div>
-
-  <div id="tournament-info">
-    <h3>Progress</h3>
-    <div class="progress" id="tournamentProgress">0/5</div>
-    <button id="btnStopTournament" title="Stop tournament (Ctrl+Shift+T)" style="display: none;">Stop</button>
-  </div>
-
 
 
   <div id="gameOver" style="display: none;">
@@ -627,9 +764,36 @@
     <button id="btnCloseGameOver">Close</button>
   </div>
 
-  <div id="pauseOverlay">
-    <h2>PAUSED</h2>
+  <!-- Custom Confirmation Modal -->
+  <div id="confirmModal" style="display: none;">
+    <div class="confirm-content">
+      <h2 id="confirmTitle">Confirm Action</h2>
+      <p id="confirmMessage"></p>
+      <div class="confirm-buttons">
+        <button id="btnConfirmYes">Yes</button>
+        <button id="btnConfirmNo">No</button>
+      </div>
+    </div>
   </div>
+
+  <div id="pauseOverlay">
+    <div class="pause-content">
+      <h2>PAUSED</h2>
+      <p>Press SPACE, click PAUSE button, or click here to resume</p>
+    </div>
+  </div>
+
+  <!-- Footer with Keyboard Shortcuts -->
+  <footer id="footer">
+    <div class="shortcuts-container">
+      <span class="shortcut-item"><span class="key">SPACE</span> Pause</span>
+      <span class="shortcut-item"><span class="key">CTRL+N</span> New Game</span>
+      <span class="shortcut-item"><span class="key">CTRL+R</span> Reset</span>
+      <span class="shortcut-item"><span class="key">CTRL+1/2/3</span> Modes</span>
+      <span class="shortcut-item"><span class="key">CTRL+T</span> Tournament</span>
+      <span class="shortcut-item"><span class="key">CTRL+H</span> Hide Help</span>
+    </div>
+  </footer>
 
   <script src="GameScene.js"></script>
   <script src="ai.js"></script>

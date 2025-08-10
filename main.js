@@ -59,9 +59,49 @@ window.addEventListener('DOMContentLoaded', () => {
     // You could add a toast notification here
   }
 
+  // Custom confirmation modal
+  function showConfirmModal(title, message, onConfirm, onCancel) {
+    const modal = document.getElementById('confirmModal');
+    const titleElement = document.getElementById('confirmTitle');
+    const messageElement = document.getElementById('confirmMessage');
+    const yesButton = document.getElementById('btnConfirmYes');
+    const noButton = document.getElementById('btnConfirmNo');
+
+    if (modal && titleElement && messageElement && yesButton && noButton) {
+      titleElement.textContent = title;
+      messageElement.textContent = message;
+      
+      // Show modal
+      modal.style.display = 'flex';
+      
+      // Set up event listeners
+      const handleYes = () => {
+        modal.style.display = 'none';
+        yesButton.removeEventListener('click', handleYes);
+        noButton.removeEventListener('click', handleNo);
+        if (onConfirm) onConfirm();
+      };
+      
+      const handleNo = () => {
+        modal.style.display = 'none';
+        yesButton.removeEventListener('click', handleYes);
+        noButton.removeEventListener('click', handleNo);
+        if (onCancel) onCancel();
+      };
+      
+      yesButton.addEventListener('click', handleYes);
+      noButton.addEventListener('click', handleNo);
+      
+      // Focus on Yes button
+      yesButton.focus();
+    }
+  }
+
   // Helper function to confirm action
   function confirmAction(message) {
-    return confirm(message);
+    return new Promise((resolve) => {
+      showConfirmModal('Confirm Action', message, () => resolve(true), () => resolve(false));
+    });
   }
 
   // Mode buttons
@@ -100,16 +140,18 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   // New Game button
-  btnNewGame.onclick = () => {
-    if (confirmAction('Are you sure you want to start a new game? This will reset everything.')) {
+  btnNewGame.onclick = async () => {
+    const confirmed = await confirmAction('Are you sure you want to start a new game? This will reset everything.');
+    if (confirmed) {
       console.log('New Game clicked');
       location.reload();
     }
   };
 
   // Reset button
-  btnReset.onclick = () => {
-    if (confirmAction('Are you sure you want to reset the current game?')) {
+  btnReset.onclick = async () => {
+    const confirmed = await confirmAction('Are you sure you want to reset the current game?');
+    if (confirmed) {
       console.log('Reset clicked');
       const scene = getGameScene();
       if (scene) {
@@ -169,18 +211,20 @@ window.addEventListener('DOMContentLoaded', () => {
   const btnStopTournament = document.getElementById('btnStopTournament');
   
   if (tournamentButton) {
-    tournamentButton.onclick = () => {
+    tournamentButton.onclick = async () => {
       const scene = getGameScene();
       if (!scene) return;
 
       // Check if game is in progress
       if (scene.gameActive && !scene.isPaused) {
-        if (!confirmAction('Game is in progress. Do you want to start tournament anyway? This will reset the current game.')) {
+        const continueAnyway = await confirmAction('Game is in progress. Do you want to start tournament anyway? This will reset the current game.');
+        if (!continueAnyway) {
           return;
         }
       }
 
-      if (confirmAction('Start tournament mode? This will play 5 games and track the overall winner.')) {
+      const startTournament = await confirmAction('Start tournament mode? This will play 5 games and track the overall winner.');
+      if (startTournament) {
         scene.startTournament();
         updateTournamentButtonState(true);
       }
@@ -188,11 +232,12 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   if (btnStopTournament) {
-    btnStopTournament.onclick = () => {
+    btnStopTournament.onclick = async () => {
       const scene = getGameScene();
       if (!scene) return;
 
-      if (confirmAction('Stop tournament? This will end the current tournament.')) {
+      const stopTournament = await confirmAction('Stop tournament? This will end the current tournament.');
+      if (stopTournament) {
         scene.stopTournament();
         updateTournamentButtonState(false);
       }
@@ -200,15 +245,23 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateTournamentButtonState(isActive) {
+    const tournamentStatus = document.getElementById('tournamentStatus');
+    
     if (tournamentButton) {
       if (isActive) {
         tournamentButton.classList.add('active');
         tournamentButton.classList.remove('disabled');
         tournamentButton.title = 'Tournament in progress (Ctrl+Shift+T to stop)';
+        if (tournamentStatus) {
+          tournamentStatus.textContent = 'Tournament Active';
+        }
       } else {
         tournamentButton.classList.remove('active');
         tournamentButton.classList.remove('disabled');
         tournamentButton.title = 'Start tournament mode (Ctrl+T)';
+        if (tournamentStatus) {
+          tournamentStatus.textContent = 'Play Tournament';
+        }
       }
     }
 
@@ -224,6 +277,44 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Check if confirmation modal is open
+    const confirmModal = document.getElementById('confirmModal');
+    if (confirmModal && confirmModal.style.display === 'flex') {
+      const yesButton = document.getElementById('btnConfirmYes');
+      const noButton = document.getElementById('btnConfirmNo');
+      
+      if (event.key === 'Enter' && yesButton) {
+        event.preventDefault();
+        yesButton.click();
+        return;
+      }
+      
+      if (event.key === 'Escape' && noButton) {
+        event.preventDefault();
+        noButton.click();
+        return;
+      }
+      
+      // Don't process other shortcuts when modal is open
+      return;
+    }
+
+    // Check if pause overlay is open
+    const pauseOverlay = document.getElementById('pauseOverlay');
+    if (pauseOverlay && pauseOverlay.style.display === 'flex') {
+      if (event.key === ' ') {
+        event.preventDefault();
+        const scene = getGameScene();
+        if (scene && scene.isPaused) {
+          scene.togglePause();
+        }
+        return;
+      }
+      
+      // Don't process other shortcuts when pause overlay is open
+      return;
+    }
+
     const scene = getGameScene();
     if (!scene) return;
 
@@ -236,18 +327,22 @@ window.addEventListener('DOMContentLoaded', () => {
       case 'R':
         if (event.ctrlKey) {
           event.preventDefault();
-          if (confirmAction('Are you sure you want to reset the current game?')) {
-            scene.resetGame();
-          }
+          confirmAction('Are you sure you want to reset the current game?').then(confirmed => {
+            if (confirmed) {
+              scene.resetGame();
+            }
+          });
         }
         break;
       case 'n':
       case 'N':
         if (event.ctrlKey) {
           event.preventDefault();
-          if (confirmAction('Are you sure you want to start a new game? This will reset everything.')) {
-            location.reload();
-          }
+          confirmAction('Are you sure you want to start a new game? This will reset everything.').then(confirmed => {
+            if (confirmed) {
+              location.reload();
+            }
+          });
         }
         break;
       case '1':
@@ -286,9 +381,37 @@ window.addEventListener('DOMContentLoaded', () => {
           }
         }
         break;
+      case 'h':
+      case 'H':
+        if (event.ctrlKey) {
+          event.preventDefault();
+          toggleFooter();
+        }
+        break;
     }
   });
 
   // Set initial active mode
   setActiveMode(btnPvP);
+
+  // Add click handler for pause overlay
+  const pauseOverlay = document.getElementById('pauseOverlay');
+  if (pauseOverlay) {
+    pauseOverlay.addEventListener('click', () => {
+      const scene = getGameScene();
+      if (scene && scene.isPaused) {
+        scene.togglePause();
+      }
+    });
+  }
+
+  // Footer toggle functionality
+  function toggleFooter() {
+    const footer = document.getElementById('footer');
+    if (footer) {
+      const isVisible = footer.style.display !== 'none';
+      footer.style.display = isVisible ? 'none' : 'block';
+      console.log(`Footer ${isVisible ? 'hidden' : 'shown'}`);
+    }
+  }
 });
