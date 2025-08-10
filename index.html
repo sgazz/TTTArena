@@ -306,21 +306,19 @@
     /* Semafor Panel */
     #semafor { 
       position: absolute; 
-      left: 50%;
+      left: 0;
+      right: 0;
       top: 30px; 
-      transform: translateX(-50%);
       background: var(--crt-bg-dark);
       padding: 20px 35px;
       border: 3px solid var(--crt-green);
       border-radius: 0;
-      min-width: 450px;
       box-shadow: var(--crt-border-glow);
       text-align: center;
       z-index: 10;
       font-family: 'Orbitron', monospace;
       font-weight: 700;
       text-shadow: var(--crt-text-glow);
-      position: relative;
       overflow: hidden;
     }
 
@@ -349,11 +347,12 @@
 
     .semafor-content {
       display: flex;
-      justify-content: center;
+      justify-content: space-between;
       align-items: center;
-      gap: 15px;
       width: 100%;
       text-align: center;
+      position: relative;
+      z-index: 1;
     }
 
     .player { 
@@ -364,6 +363,7 @@
       letter-spacing: 2px;
       min-width: 20px;
       text-align: center;
+      flex: 1.2;
     }
 
     .score { 
@@ -374,6 +374,7 @@
       letter-spacing: 2px;
       min-width: 20px;
       text-align: center;
+      flex: 1.2;
     }
 
     .separator {
@@ -385,6 +386,7 @@
       margin: 0 5px;
       min-width: 15px;
       text-align: center;
+      flex: 0.3;
     }
 
     .time { 
@@ -395,6 +397,7 @@
       letter-spacing: 2px;
       min-width: 35px;
       text-align: center;
+      flex: 1.2;
     }
 
     .time.critical { 
@@ -413,21 +416,18 @@
       color: var(--crt-green-dim);
       text-transform: uppercase;
       letter-spacing: 2px;
-      animation: bonus-pulse 2s infinite;
-      min-width: 100px;
+      min-width: 60px;
       text-align: center;
+      flex: 0.6;
     }
 
-    @keyframes bonus-pulse {
-      0%, 100% { opacity: 0.7; }
-      50% { opacity: 1; }
-    }
+
 
     /* AI Difficulty Panel */
     #ai-difficulty { 
       position: absolute; 
       right: 30px;
-      top: 30px; 
+      top: 120px; 
       background: var(--crt-bg-dark);
       padding: 15px;
       border: 3px solid var(--crt-green);
@@ -867,21 +867,21 @@
 
     /* Responsive Design */
     @media (max-width: 1200px) {
-      #semafor { left: 50%; transform: translateX(-50%); }
-      #ai-difficulty { right: 20px; top: 120px; }
+      #semafor { left: 0; right: 0; transform: none; }
+      #ai-difficulty { right: 20px; top: 140px; }
     }
 
     @media (max-width: 768px) {
       #ui { left: 10px; top: 450px; transform: translateY(-50%); max-width: 100px; gap: 10px; }
       button { font-size: 10px; padding: 6px 8px; min-width: 80px; }
-      #semafor { left: 50%; transform: translateX(-50%); min-width: 320px; padding: 10px 20px; }
-      #ai-difficulty { right: 10px; top: 100px; min-width: 140px; padding: 10px; }
+      #semafor { left: 0; right: 0; transform: none; padding: 10px 20px; }
+      #ai-difficulty { right: 10px; top: 120px; min-width: 140px; padding: 10px; }
       .semafor-content { gap: 10px; }
       .player { font-size: 18px; }
       .score { font-size: 16px; }
       .separator { font-size: 16px; margin: 0 4px; }
       .time { font-size: 14px; }
-      .bonus-info { font-size: 12px; min-width: 80px; }
+      .bonus-info { font-size: 10px; min-width: 40px; }
       .ai-btn { font-size: 8px; padding: 4px 6px; }
       
       /* Footer responsive */
@@ -926,6 +926,7 @@
 
   <div id="semafor">
     <div class="semafor-content">
+      <span class="bonus-info" id="bonusInfoX"></span>
       <span class="player">X</span>
       <span class="score" id="scoreX">0</span>
       <span class="time" id="timeX">0:00</span>
@@ -933,7 +934,7 @@
       <span class="time" id="timeO">0:00</span>
       <span class="score" id="scoreO">0</span>
       <span class="player">O</span>
-      <span class="bonus-info" id="bonusInfo"></span>
+      <span class="bonus-info" id="bonusInfoO"></span>
     </div>
   </div>
 

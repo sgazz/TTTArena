@@ -161,6 +161,15 @@ class GameScene extends Phaser.Scene {
   updateTimer() {
     if (!this.gameActive || this.isPaused) return;
     
+    console.log(`Timer update: ${this.currentPlayer} has ${this.timers[this.currentPlayer]}s`);
+    
+    // Prevent timer from going below 0
+    if (this.timers[this.currentPlayer] <= 0) {
+      console.log(`Timer timeout for ${this.currentPlayer}`);
+      this.onTimeOut();
+      return;
+    }
+    
     this.timers[this.currentPlayer] -= 1;
     this.updateSemafor();
     
@@ -170,6 +179,7 @@ class GameScene extends Phaser.Scene {
     }
     
     if (this.timers[this.currentPlayer] <= 0) {
+      console.log(`Timer timeout for ${this.currentPlayer} (after update)`);
       this.onTimeOut();
     }
   }
@@ -217,7 +227,55 @@ class GameScene extends Phaser.Scene {
     }
     
     if (this.lastBonus) {
-      const bonusElement = document.getElementById('bonusInfo');
+      console.log('Setting bonus info:', this.lastBonus);
+      
+      // Determine which player gets the bonus based on the bonus message
+      let bonusElement;
+      if (this.lastBonus.includes('X')) {
+        bonusElement = document.getElementById('bonusInfoX');
+        console.log('Setting bonus for X player');
+      } else if (this.lastBonus.includes('O')) {
+        bonusElement = document.getElementById('bonusInfoO');
+        console.log('Setting bonus for O player');
+      } else {
+        // For general bonuses (like draws), show on both
+        const bonusElementX = document.getElementById('bonusInfoX');
+        const bonusElementO = document.getElementById('bonusInfoO');
+        
+        console.log('Setting bonus for both players (general bonus)');
+        bonusElementX.textContent = this.lastBonus;
+        bonusElementO.textContent = this.lastBonus;
+        
+        // Animate both bonus info elements
+        [bonusElementX, bonusElementO].forEach(element => {
+          element.style.color = '#ffcc66';
+          element.style.fontWeight = 'bold';
+          element.style.fontSize = '14px';
+        });
+        
+        // Clear both bonus info after 2 seconds with fade effect
+        setTimeout(() => {
+          console.log('Clearing bonus info after 2 seconds');
+          [bonusElementX, bonusElementO].forEach(element => {
+            element.style.transition = 'opacity 0.5s';
+            element.style.opacity = '0';
+          });
+          setTimeout(() => {
+            [bonusElementX, bonusElementO].forEach(element => {
+              element.textContent = '';
+              element.style.opacity = '1';
+              element.style.color = '#aaa';
+              element.style.fontWeight = 'normal';
+              element.style.fontSize = '12px';
+            });
+            this.lastBonus = null;
+            console.log('Bonus info cleared');
+          }, 500);
+        }, 2000);
+        return;
+      }
+      
+      console.log('Setting bonus for specific player:', bonusElement);
       bonusElement.textContent = this.lastBonus;
       
       // Animate bonus info
@@ -225,8 +283,9 @@ class GameScene extends Phaser.Scene {
       bonusElement.style.fontWeight = 'bold';
       bonusElement.style.fontSize = '14px';
       
-      // Clear bonus info after 1 second with fade effect
+      // Clear bonus info after 2 seconds with fade effect
       setTimeout(() => {
+        console.log('Clearing bonus info after 2 seconds');
         bonusElement.style.transition = 'opacity 0.5s';
         bonusElement.style.opacity = '0';
         setTimeout(() => {
@@ -236,12 +295,18 @@ class GameScene extends Phaser.Scene {
           bonusElement.style.fontWeight = 'normal';
           bonusElement.style.fontSize = '12px';
           this.lastBonus = null;
+          console.log('Bonus info cleared');
         }, 500);
-      }, 1000);
+      }, 2000);
     }
   }
 
   formatTime(seconds) {
+    // Handle negative values
+    if (seconds < 0) {
+      return '0:00';
+    }
+    
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
@@ -325,6 +390,16 @@ class GameScene extends Phaser.Scene {
 
   drawBoards() {
     console.log('Drawing boards...');
+    
+    // Clear existing boards
+    if (this.boardGroup) {
+      this.boardGroup.clear(true);
+    }
+    this.boardGroup = this.add.group();
+    
+    // Reset minis array
+    this.minis = [];
+    
     // Centriramo table u canvas-u, ostavljajući prostor za UI elemente
     const canvasWidth = 1200;
     const canvasHeight = 900;
@@ -344,11 +419,6 @@ class GameScene extends Phaser.Scene {
     const startY = uiTopHeight + (gameAreaHeight - totalBoardsHeight) / 2;
     
     console.log(`Board positions: startX=${startX}, startY=${startY}, miniSize=${miniSize}`);
-    
-    if (this.boardGroup) {
-      this.boardGroup.clear(true);
-    }
-    this.boardGroup = this.add.group();
 
     for (let b = 0; b < this.BOARD_COUNT; b++) {
       const r = Math.floor(b / 3);
@@ -378,15 +448,19 @@ class GameScene extends Phaser.Scene {
           const cy = y0 + gridOffsetY + row * (this.cellSize + this.cellSpacing) + this.cellSize/2;
           const rect = this.add.rectangle(cx, cy, this.cellSize, this.cellSize, 0x0a0a0a).setStrokeStyle(1, 0x00ff41);
           const txt = this.add.text(cx, cy, this.boards[b][row*3+col] || '', { fontSize: '20px', color: '#00ff41', fontFamily: 'Orbitron, monospace', fontStyle: 'bold' }).setOrigin(0.5);
+          this.boardGroup.add(rect);
+          this.boardGroup.add(txt);
           cells.push({ rect, txt, index: row*3+col, cx, cy });
         }
       }
 
       // Board name - herojsko ime - centriran iznad većeg background kvadrata
       const label = this.add.text(x0 + (miniSize + 20)/2, y0 - 22, this.boardNames[b], { fontSize: '16px', color: '#00ff41', fontFamily: 'Orbitron, monospace', fontStyle: 'bold' }).setOrigin(0.5);
+      this.boardGroup.add(label);
 
       // Winner indicator - manji font - centriran u gornjem desnom uglu većeg background kvadrata
       const winnerStamp = this.add.text(x0 + miniSize + 5, y0 - 15, this.boardWinners[b] ? this.boardWinners[b] : '', { fontSize: '14px', color: '#00ff41', fontFamily: 'Orbitron, monospace', fontStyle: 'bold' }).setOrigin(0.5);
+      this.boardGroup.add(winnerStamp);
 
       this.minis.push({
         x0, y0, bg, highlight, cells, label, winnerStamp, index: b
@@ -408,7 +482,8 @@ class GameScene extends Phaser.Scene {
       mini.highlight.setVisible(b === this.currentBoardIndex && !this.boardFinished[b]);
       mini.winnerStamp.setText(this.boardWinners[b] ? this.boardWinners[b] : '');
       mini.cells.forEach(c => {
-        c.txt.setText(this.boards[b][c.index] || '');
+        const cellValue = this.boards[b][c.index] || '';
+        c.txt.setText(cellValue);
         if (this.boardFinished[b]) {
           c.txt.setAlpha(0.45);
           c.rect.setFillStyle(0x050505, 1);
@@ -653,11 +728,20 @@ class GameScene extends Phaser.Scene {
     this.animateScoreUpdate(winner);
     
     // Timer adjustments
+    const loser = winner === 'X' ? 'O' : 'X';
+    const oldWinnerTime = this.timers[winner];
+    const oldLoserTime = this.timers[loser];
+    
     this.timers[winner] += 15;
-    this.timers[winner === 'X' ? 'O' : 'X'] -= 10;
+    this.timers[loser] = Math.max(0, this.timers[loser] - 10); // Prevent negative time
+    
+    console.log(`Timer adjustments for win:`);
+    console.log(`  ${winner}: ${oldWinnerTime}s → ${this.timers[winner]}s (+15)`);
+    console.log(`  ${loser}: ${oldLoserTime}s → ${this.timers[loser]}s (-10)`);
     
     // Update semafor
-    this.lastBonus = `${winner} +15s, ${winner === 'X' ? 'O' : 'X'} -10s`;
+    this.lastBonus = `${winner} +15s, ${loser} -10s`;
+    console.log('Board win - setting lastBonus:', this.lastBonus);
     this.updateSemafor();
     
     // Check if all boards are finished (game complete)
@@ -681,11 +765,19 @@ class GameScene extends Phaser.Scene {
     this.playSound('draw');
     
     // Timer adjustments for draw
+    const oldXTime = this.timers.X;
+    const oldOTime = this.timers.O;
+    
     this.timers.X += 5;
     this.timers.O += 5;
     
+    console.log(`Timer adjustments for draw:`);
+    console.log(`  X: ${oldXTime}s → ${this.timers.X}s (+5)`);
+    console.log(`  O: ${oldOTime}s → ${this.timers.O}s (+5)`);
+    
     // Update semafor
     this.lastBonus = 'Draw: X +5s, O +5s';
+    console.log('Board draw - setting lastBonus:', this.lastBonus);
     this.updateSemafor();
     
     // Check if all boards are finished (game complete)
@@ -713,12 +805,12 @@ class GameScene extends Phaser.Scene {
 
     // Enhanced winning animation with explosion effect
     this.winningCells.forEach(cell => {
-      // Scale up winning cells
+      // Scale up winning cells - shorter duration
       this.tweens.add({
         targets: cell,
         scaleX: 1.3,
         scaleY: 1.3,
-        duration: 300,
+        duration: 200,
         ease: 'Back.easeOut'
       });
       
@@ -726,19 +818,22 @@ class GameScene extends Phaser.Scene {
       cell.setStrokeStyle(5, 0xffcc66);
     });
     
-    // Blink animation with rotation
+    // Blink animation with rotation - shorter duration
     this.blinkTween = this.tweens.add({
       targets: this.winningCells,
       alpha: 0,
       rotation: 0.1,
-      duration: 150,
+      duration: 100,
       yoyo: true,
-      repeat: 6,
+      repeat: 3,
       onComplete: () => {
+        console.log('Winning animation completed, resetting cells...');
         this.winningCells.forEach(cell => {
           cell.setAlpha(1);
           cell.setRotation(0);
+          cell.setScale(1, 1); // Reset scale to normal
           cell.setStrokeStyle(1, 0x00ff41);
+          console.log('Cell reset - scale:', cell.scaleX, cell.scaleY);
         });
         this.winningCells = [];
         // Remove winning line
@@ -776,12 +871,12 @@ class GameScene extends Phaser.Scene {
       this.winningLine.lineTo(endX, endY);
       this.winningLine.strokePath();
 
-      // Animate line drawing
+      // Animate line drawing - shorter duration
       this.tweens.add({
         targets: this.winningLine,
         alpha: 0,
-        duration: 800,
-        delay: 400,
+        duration: 500,
+        delay: 200,
         ease: 'Power2'
       });
     }
