@@ -1583,9 +1583,14 @@ class GameScene extends Phaser.Scene {
   }
 
   updateArenaButtonState(isActive) {
+    console.log('updateArenaButtonState() called with isActive:', isActive);
     const arenaButton = document.getElementById('arena-button');
     const btnStopArena = document.getElementById('btnStopArena');
     const arenaStatus = document.getElementById('arenaStatus');
+    
+    console.log('arenaButton found:', !!arenaButton);
+    console.log('btnStopArena found:', !!btnStopArena);
+    console.log('arenaStatus found:', !!arenaStatus);
     
     if (arenaButton) {
       if (isActive) {
@@ -1595,6 +1600,7 @@ class GameScene extends Phaser.Scene {
         if (arenaStatus) {
           arenaStatus.textContent = 'Arena Active';
         }
+        console.log('Arena button set to active');
       } else {
         arenaButton.classList.remove('active');
         arenaButton.classList.remove('disabled');
@@ -1602,11 +1608,13 @@ class GameScene extends Phaser.Scene {
         if (arenaStatus) {
           arenaStatus.textContent = 'Enter Arena';
         }
+        console.log('Arena button set to inactive');
       }
     }
 
     if (btnStopArena) {
       btnStopArena.style.display = isActive ? 'block' : 'none';
+      console.log('Stop arena button display set to:', isActive ? 'block' : 'none');
     }
   }
 
