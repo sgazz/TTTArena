@@ -427,7 +427,7 @@
     #ai-difficulty { 
       position: absolute; 
       right: 30px;
-      top: 120px; 
+      top: 280px; 
       background: var(--crt-bg-dark);
       padding: 15px;
       border: 3px solid var(--crt-green);
@@ -484,7 +484,7 @@
     #arena-button { 
       position: absolute; 
       right: 30px;
-      top: 280px; 
+      top: 440px; 
       background: var(--crt-bg-dark);
       padding: 15px;
       border: 3px solid var(--crt-green);
@@ -531,7 +531,7 @@
     #arena-info { 
       position: absolute; 
       right: 30px;
-      top: 380px; 
+      top: 540px; 
       background: var(--crt-bg-dark);
       padding: 15px;
       border: 3px solid var(--crt-green);
@@ -644,6 +644,23 @@
 
     /* Custom Confirmation Modal */
     #confirmModal { 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 300;
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      text-shadow: var(--crt-text-glow);
+    }
+
+    /* Game Mode Selection Modal */
+    #gameModeModal { 
       position: fixed; 
       top: 0; 
       left: 0; 
@@ -1013,6 +1030,19 @@
     <div class="pause-content">
       <h2>PAUSED</h2>
       <p>Press SPACE, click PAUSE button, or click here to resume</p>
+    </div>
+  </div>
+
+  <!-- Game Mode Selection Modal -->
+  <div id="gameModeModal" style="display: none;">
+    <div class="confirm-content">
+      <h2>Select Game Mode</h2>
+      <p>Please select a game mode (PvP, PvAI, or AIvP) before starting Arena mode.</p>
+      <div class="confirm-buttons">
+        <button id="btnModePvP">PvP</button>
+        <button id="btnModePvAI">PvAI</button>
+        <button id="btnModeAIvP">AIvP</button>
+      </div>
     </div>
   </div>
 

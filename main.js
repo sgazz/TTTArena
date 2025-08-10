@@ -98,6 +98,35 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Game mode selection modal
+  function showGameModeModal(onModeSelected) {
+    const modal = document.getElementById('gameModeModal');
+    const pvpButton = document.getElementById('btnModePvP');
+    const pvaiButton = document.getElementById('btnModePvAI');
+    const aivpButton = document.getElementById('btnModeAIvP');
+
+    if (modal && pvpButton && pvaiButton && aivpButton) {
+      // Show modal
+      modal.style.display = 'flex';
+      
+      // Set up event listeners
+      const handleModeSelect = (mode) => {
+        modal.style.display = 'none';
+        pvpButton.removeEventListener('click', () => handleModeSelect('PvP'));
+        pvaiButton.removeEventListener('click', () => handleModeSelect('PvAI'));
+        aivpButton.removeEventListener('click', () => handleModeSelect('AIvP'));
+        if (onModeSelected) onModeSelected(mode);
+      };
+      
+      pvpButton.addEventListener('click', () => handleModeSelect('PvP'));
+      pvaiButton.addEventListener('click', () => handleModeSelect('PvAI'));
+      aivpButton.addEventListener('click', () => handleModeSelect('AIvP'));
+      
+      // Focus on first button
+      pvpButton.focus();
+    }
+  }
+
   // Helper function to confirm action
   function confirmAction(message) {
     return new Promise((resolve) => {
@@ -229,12 +258,22 @@ window.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      const startArena = await confirmAction('Start arena mode? This will play 5 games and track the overall winner with detailed statistics. You need to select a game mode (PvP/PvAI/AIvP) first.');
+      const startArena = await confirmAction('Start arena mode? This will play 5 games and track the overall winner with detailed statistics.');
       if (startArena) {
         // Check if a mode is selected
         const activeModeButton = document.querySelector('.mode-btn.active');
         if (!activeModeButton) {
-          alert('Please select a game mode (PvP, PvAI, or AIvP) before starting Arena mode.');
+          // Show game mode selection modal
+          showGameModeModal((selectedMode) => {
+            console.log('Game mode selected from modal:', selectedMode);
+            // Set the mode button as active
+            const modeButton = document.querySelector(`[data-mode="${selectedMode}"]`);
+            if (modeButton) {
+              setActiveMode(modeButton);
+            }
+            // Start arena with selected mode
+            scene.startArena(selectedMode);
+          });
           return;
         }
         
@@ -281,6 +320,41 @@ window.addEventListener('DOMContentLoaded', () => {
       if (event.key === 'Escape' && noButton) {
         event.preventDefault();
         noButton.click();
+        return;
+      }
+      
+      // Don't process other shortcuts when modal is open
+      return;
+    }
+
+    // Check if game mode modal is open
+    const gameModeModal = document.getElementById('gameModeModal');
+    if (gameModeModal && gameModeModal.style.display === 'flex') {
+      const pvpButton = document.getElementById('btnModePvP');
+      const pvaiButton = document.getElementById('btnModePvAI');
+      const aivpButton = document.getElementById('btnModeAIvP');
+      
+      if (event.key === '1' && pvpButton) {
+        event.preventDefault();
+        pvpButton.click();
+        return;
+      }
+      
+      if (event.key === '2' && pvaiButton) {
+        event.preventDefault();
+        pvaiButton.click();
+        return;
+      }
+      
+      if (event.key === '3' && aivpButton) {
+        event.preventDefault();
+        aivpButton.click();
+        return;
+      }
+      
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        gameModeModal.style.display = 'none';
         return;
       }
       

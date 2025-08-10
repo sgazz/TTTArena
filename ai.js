@@ -61,9 +61,17 @@ const TicTacToeAI = (function() {
       moves.push({ index: move, score: result.score });
     }
 
-    return player === ai
+    const bestMove = player === ai
       ? moves.reduce((best, m) => m.score > best.score ? m : best)
       : moves.reduce((best, m) => m.score < best.score ? m : best);
+
+    if (depth === 0) {
+      console.log(`Minimax evaluation at depth 0:`);
+      moves.forEach(m => console.log(`  Move ${m.index}: score ${m.score}`));
+      console.log(`Best move: ${bestMove.index} with score ${bestMove.score}`);
+    }
+
+    return bestMove;
   }
 
   function ruleBasedMove(board, aiPlayer) {
@@ -91,27 +99,53 @@ const TicTacToeAI = (function() {
       console.log(`Board state:`, board);
       console.log(`Available moves:`, availableMoves);
       console.log(`Smart chance: ${smartChance}, Minimax depth: ${minimaxDepth}`);
+      console.log(`AI Player: ${aiPlayer}, Human Player: ${humanPlayer}`);
 
       if (availableMoves.length === 9 && symbol === 'X' && difficulty !== 'easy') {
         console.log('First move optimization: choosing center (4)');
         return 4; // center first move
       }
 
-      if (Math.random() < smartChance) {
+      const randomValue = Math.random();
+      console.log(`Random value: ${randomValue.toFixed(3)}, Smart chance threshold: ${smartChance}`);
+      console.log(`Will use smart strategy: ${randomValue < smartChance ? 'YES' : 'NO'}`);
+
+      if (randomValue < smartChance) {
         if (minimaxDepth > 0) {
           console.log(`${difficulty} AI: Using minimax strategy (depth ${minimaxDepth})`);
+          console.log(`Calling minimax with: player=${aiPlayer}, ai=${aiPlayer}, human=${humanPlayer}, depth=0, maxDepth=${minimaxDepth}`);
           const result = minimax(board, aiPlayer, aiPlayer, humanPlayer, 0, minimaxDepth);
           const move = result.index ?? findRandomMove(board);
-          console.log(`Minimax chose move: ${move} with score: ${result.score}`);
+          console.log(`Minimax result: index=${result.index}, score=${result.score}`);
+          console.log(`Final move chosen: ${move}`);
           return move;
         }
         console.log(`${difficulty} AI: Using rule-based strategy`);
-        const move = ruleBasedMove(board, aiPlayer);
-        console.log(`Rule-based chose move: ${move}`);
-        return move;
+        console.log('Checking for winning move...');
+        const winningMove = findWinningMove(board, aiPlayer);
+        if (winningMove !== null) {
+          console.log(`Found winning move: ${winningMove}`);
+          return winningMove;
+        }
+        console.log('No winning move found, checking for blocking move...');
+        const blockingMove = findBlockingMove(board, aiPlayer);
+        if (blockingMove !== null) {
+          console.log(`Found blocking move: ${blockingMove}`);
+          return blockingMove;
+        }
+        console.log('No blocking move found, checking for strategic move...');
+        const strategicMove = findStrategicMove(board);
+        if (strategicMove !== null) {
+          console.log(`Found strategic move: ${strategicMove}`);
+          return strategicMove;
+        }
+        console.log('No strategic move found, using random move');
+        const randomMove = findRandomMove(board);
+        console.log(`Rule-based chose move: ${randomMove}`);
+        return randomMove;
       }
       
-      console.log(`${difficulty} AI: Using random move`);
+      console.log(`${difficulty} AI: Using random move (random value ${randomValue.toFixed(3)} >= ${smartChance})`);
       const move = findRandomMove(board);
       console.log(`Random chose move: ${move}`);
       console.log(`=== END AI MOVE DEBUG ===`);

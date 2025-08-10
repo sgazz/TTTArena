@@ -1257,11 +1257,14 @@ class GameScene extends Phaser.Scene {
       return;
     }
     
+    // Determine which player the AI controls based on the mode
     const aiIsX = (this.mode === 'AIvP');
     const aiIsO = (this.mode === 'PvAI');
 
+    // Check if it's AI's turn
     const aiTurn = (aiIsX && this.currentPlayer === 'X') || (aiIsO && this.currentPlayer === 'O');
     console.log(`AI controls X: ${aiIsX}, AI controls O: ${aiIsO}, Is AI turn: ${aiTurn}`);
+    console.log(`Mode: ${this.mode}, Current player: ${this.currentPlayer}`);
     console.log(`=== END AI DEBUG ===`);
     
     if (!aiTurn) {
@@ -1315,9 +1318,25 @@ class GameScene extends Phaser.Scene {
         return;
       }
       
-      console.log(`Calling AI with difficulty: ${this.aiDifficulty}, player: ${this.currentPlayer}`);
+      // Determine which player the AI should play for based on the mode
+      let aiPlayer;
+      if (this.mode === 'AIvP') {
+        aiPlayer = 'X'; // AI always plays X in AIvP mode
+      } else if (this.mode === 'PvAI') {
+        aiPlayer = 'O'; // AI always plays O in PvAI mode
+      } else {
+        aiPlayer = this.currentPlayer; // Fallback
+      }
+      
+      console.log(`=== AI CALL DEBUG ===`);
+      console.log(`Calling AI with difficulty: ${this.aiDifficulty}, player: ${aiPlayer}`);
       console.log(`Current AI difficulty value: "${this.aiDifficulty}"`);
-      const move = TicTacToeAI.makeMove(board.slice(), this.currentPlayer, this.aiDifficulty);
+      console.log(`Board state:`, board.slice());
+      console.log(`Board index: ${this.currentBoardIndex}`);
+      console.log(`Mode: ${this.mode}, AI should play for: ${aiPlayer}`);
+      const move = TicTacToeAI.makeMove(board.slice(), aiPlayer, this.aiDifficulty);
+      console.log(`AI returned move: ${move}`);
+      console.log(`=== END AI CALL DEBUG ===`);
       if (move != null) {
         // Calculate actual thinking time and deduct from timer only if timer is positive
         const aiEndTime = Date.now();
@@ -1460,9 +1479,12 @@ class GameScene extends Phaser.Scene {
   }
 
   setAIDifficulty(difficulty) {
+    console.log(`=== AI DIFFICULTY DEBUG ===`);
     console.log(`setAIDifficulty called with: ${difficulty}`);
+    console.log(`Previous AI difficulty: ${this.aiDifficulty}`);
     this.aiDifficulty = difficulty;
     console.log(`AI difficulty set to: ${this.aiDifficulty}`);
+    console.log(`=== END AI DIFFICULTY DEBUG ===`);
   }
 
   startArena(selectedMode) {
