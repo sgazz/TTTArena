@@ -1348,6 +1348,7 @@ class GameScene extends Phaser.Scene {
   }
 
   startArena() {
+    console.log('startArena() called');
     this.arenaMode = true;
     this.arenaGames = 0;
     this.arenaScore = { X: 0, O: 0, D: 0 };
@@ -1360,6 +1361,7 @@ class GameScene extends Phaser.Scene {
     };
     
     console.log('Starting arena mode');
+    console.log('Arena mode set to:', this.arenaMode);
     this.showArenaInfo();
     this.updateArenaInfo();
     this.updateArenaButtonState(true);
@@ -1510,37 +1512,53 @@ class GameScene extends Phaser.Scene {
   }
 
   showArenaInfo() {
+    console.log('showArenaInfo() called');
     // Sakrij dugme i prikaži arena info panel
     const arenaButton = document.getElementById('arena-button');
     const arenaInfo = document.getElementById('arena-info');
     
+    console.log('arenaButton found:', !!arenaButton);
+    console.log('arenaInfo found:', !!arenaInfo);
+    
     if (arenaButton) {
       arenaButton.style.display = 'none';
+      console.log('Arena button hidden');
     }
     if (arenaInfo) {
       arenaInfo.style.display = 'block';
+      console.log('Arena info shown');
     }
     this.updateArenaInfo();
   }
 
   updateArenaInfo() {
+    console.log('updateArenaInfo() called');
     // Ažuriraj HTML arena info panel
     const arenaProgress = document.getElementById('arenaProgress');
     const arenaXWins = document.getElementById('arenaXWins');
     const arenaOWins = document.getElementById('arenaOWins');
     const arenaDraws = document.getElementById('arenaDraws');
     
+    console.log('arenaProgress found:', !!arenaProgress);
+    console.log('arenaXWins found:', !!arenaXWins);
+    console.log('arenaOWins found:', !!arenaOWins);
+    console.log('arenaDraws found:', !!arenaDraws);
+    
     if (arenaProgress) {
       arenaProgress.textContent = `${this.arenaGames}/${this.maxArenaGames}`;
+      console.log('Progress updated to:', `${this.arenaGames}/${this.maxArenaGames}`);
     }
     if (arenaXWins) {
       arenaXWins.textContent = this.arenaScore.X;
+      console.log('X wins updated to:', this.arenaScore.X);
     }
     if (arenaOWins) {
       arenaOWins.textContent = this.arenaScore.O;
+      console.log('O wins updated to:', this.arenaScore.O);
     }
     if (arenaDraws) {
       arenaDraws.textContent = this.arenaScore.D;
+      console.log('Draws updated to:', this.arenaScore.D);
     }
   }
 

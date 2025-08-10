@@ -227,7 +227,6 @@ window.addEventListener('DOMContentLoaded', () => {
       const startArena = await confirmAction('Start arena mode? This will play 5 games and track the overall winner with detailed statistics.');
       if (startArena) {
         scene.startArena();
-        updateArenaButtonState(true);
       }
     };
   }
@@ -240,36 +239,11 @@ window.addEventListener('DOMContentLoaded', () => {
       const stopArena = await confirmAction('Stop arena? This will end the current arena session.');
       if (stopArena) {
         scene.stopArena();
-        updateArenaButtonState(false);
       }
     };
   }
 
-  function updateArenaButtonState(isActive) {
-    const arenaStatus = document.getElementById('arenaStatus');
-    
-    if (arenaButton) {
-      if (isActive) {
-        arenaButton.classList.add('active');
-        arenaButton.classList.remove('disabled');
-        arenaButton.title = 'Arena in progress (Ctrl+Shift+A to stop)';
-        if (arenaStatus) {
-          arenaStatus.textContent = 'Arena Active';
-        }
-      } else {
-        arenaButton.classList.remove('active');
-        arenaButton.classList.remove('disabled');
-        arenaButton.title = 'Start arena mode (Ctrl+A)';
-        if (arenaStatus) {
-          arenaStatus.textContent = 'Enter Arena';
-        }
-      }
-    }
 
-    if (btnStopArena) {
-      btnStopArena.style.display = isActive ? 'block' : 'none';
-    }
-  }
 
   // Keyboard shortcuts
   document.addEventListener('keydown', (event) => {
