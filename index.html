@@ -480,7 +480,25 @@
       box-shadow: var(--crt-border-glow);
     }
 
-    /* Arena Button - now part of UI panel */
+    /* Arena Section - positioned on the right side */
+    #arena-section { 
+      position: absolute; 
+      right: 30px;
+      top: 280px; 
+      background: var(--crt-bg-dark);
+      padding: 15px;
+      border: 3px solid var(--crt-green);
+      border-radius: 0;
+      min-width: 160px;
+      box-shadow: var(--crt-border-glow);
+      text-align: center;
+      z-index: 10;
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      text-shadow: var(--crt-text-glow);
+    }
+
+    /* Arena Button */
     #arena-button { 
       background: var(--crt-bg-dark);
       padding: 12px;
@@ -498,7 +516,6 @@
       justify-content: center;
       cursor: pointer;
       transition: all 0.3s ease;
-      margin-top: 8px;
     }
 
     #arena-button .status { 
@@ -525,7 +542,7 @@
       border-color: var(--crt-green-dim);
     }
 
-    /* Arena Info - now part of UI panel */
+    /* Arena Info */
     #arena-info { 
       background: var(--crt-bg-dark);
       padding: 12px;
@@ -899,6 +916,7 @@
       button { font-size: 10px; padding: 6px 8px; min-width: 80px; }
       #semafor { left: 0; right: 0; transform: none; padding: 10px 20px; }
       #ai-difficulty { right: 10px; top: 120px; min-width: 140px; padding: 10px; }
+      #arena-section { right: 10px; top: 220px; min-width: 140px; padding: 10px; }
       .semafor-content { gap: 10px; }
       .player { font-size: 18px; }
       .score { font-size: 16px; }
@@ -934,31 +952,6 @@
     <button id="btnPause">Pause</button>
     <button id="btnReplay" disabled>Replay</button>
     <button id="btnSound">SOUND ON/OFF</button>
-    
-    <!-- Arena elements moved here -->
-    <div id="arena-button">
-      <div class="status" id="arenaStatus">Enter Arena</div>
-    </div>
-
-    <div id="arena-info" style="display: none;">
-      <h3>Arena Progress</h3>
-      <div class="progress" id="arenaProgress">0/5</div>
-      <div class="arena-stats" id="arenaStats">
-        <div class="stat-item">
-          <span class="stat-label">X Wins:</span>
-          <span class="stat-value" id="arenaXWins">0</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">O Wins:</span>
-          <span class="stat-value" id="arenaOWins">0</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Draws:</span>
-          <span class="stat-value" id="arenaDraws">0</span>
-        </div>
-      </div>
-      <button id="btnStopArena" style="display: none;">Stop Arena</button>
-    </div>
   </div>
 
   <div id="semafor">
@@ -981,6 +974,33 @@
       <button class="ai-btn" data-level="easy">Easy</button>
       <button class="ai-btn active" data-level="medium">Medium</button>
       <button class="ai-btn" data-level="hard">Hard</button>
+    </div>
+  </div>
+
+  <!-- Arena elements positioned on the right side -->
+  <div id="arena-section">
+    <div id="arena-button">
+      <div class="status" id="arenaStatus">Enter Arena</div>
+    </div>
+
+    <div id="arena-info" style="display: none;">
+      <h3>Arena Progress</h3>
+      <div class="progress" id="arenaProgress">0/5</div>
+      <div class="arena-stats" id="arenaStats">
+        <div class="stat-item">
+          <span class="stat-label">X Wins:</span>
+          <span class="stat-value" id="arenaXWins">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">O Wins:</span>
+          <span class="stat-value" id="arenaOWins">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Draws:</span>
+          <span class="stat-value" id="arenaDraws">0</span>
+        </div>
+      </div>
+      <button id="btnStopArena" style="display: none;">Stop Arena</button>
     </div>
   </div>
 
