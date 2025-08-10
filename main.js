@@ -382,8 +382,8 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // No initial active mode - let user choose
-  // setActiveMode(btnPvP);
+  // Set initial active mode
+  setActiveMode(btnPvP);
 
   // Add click handler for pause overlay
   const pauseOverlay = document.getElementById('pauseOverlay');

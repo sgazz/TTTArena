@@ -90,9 +90,10 @@ class GameScene extends Phaser.Scene {
     this.updateSemafor();
     console.log('Semafor updated');
     
-    // Don't start timer immediately - wait for first move
-    this.gameActive = false;
-    console.log('Game ready - waiting for first move');
+    // Start timer and activate game
+    this.gameActive = true;
+    this.startTimer();
+    console.log('Game ready - timer started');
 
     this.input.on('pointerdown', (pointer) => {
       this.handlePointer(pointer);
@@ -115,10 +116,6 @@ class GameScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-R', () => {
       this.resetArena();
     });
-
-    if (this.mode === 'AIvP') {
-      this.maybeTriggerAIMove();
-    }
   }
 
   initState() {
@@ -1150,7 +1147,11 @@ class GameScene extends Phaser.Scene {
   setMode(m) {
     console.log(`Setting mode to: ${m}`);
     this.mode = m;
-        this.resetArena();
+    
+    // Only reset arena if not in arena mode
+    if (!this.arenaMode) {
+      this.resetArena();
+    }
     
     // Ako je arena mode aktivan, prikaži arena info
     if (this.arenaMode) {
@@ -1158,7 +1159,7 @@ class GameScene extends Phaser.Scene {
     }
 
     if (this.mode === 'AIvP') {
-      setTimeout(()=> this.maybeTriggerAIMove(), 200);
+      this.time.delayedCall(200, () => this.maybeTriggerAIMove());
     }
   }
 
@@ -1385,7 +1386,6 @@ class GameScene extends Phaser.Scene {
     // Reset for new game and set the arena mode
     this.resetGame();
     this.setMode(this.arenaModeType);
-    this.gameActive = false; // Don't start timer until first move
     
     // If AI mode, trigger AI move after a short delay
     if (this.arenaModeType === 'AIvP') {
