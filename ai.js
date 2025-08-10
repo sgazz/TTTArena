@@ -1,15 +1,12 @@
 const TicTacToeAI = (function() {
-  // Winning combinations
   const wins = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-    [0, 4, 8], [2, 4, 6]             // Diagonals
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6]
   ];
 
-  // Check if there's a winner
   function checkWinner(board) {
-    for (let combo of wins) {
-      const [a, b, c] = combo;
+    for (let [a, b, c] of wins) {
       if (board[a] && board[a] === board[b] && board[a] === board[c]) {
         return board[a];
       }
@@ -17,212 +14,108 @@ const TicTacToeAI = (function() {
     return null;
   }
 
-  // Check if board is full
-  function isBoardFull(board) {
-    return board.every(cell => cell !== null);
-  }
-
-  // Get available moves
   function getAvailableMoves(board) {
-    return board.map((cell, index) => cell === null ? index : null).filter(index => index !== null);
+    return board.map((cell, i) => cell === null ? i : null).filter(i => i !== null);
   }
 
-  // Find winning move for a player
   function findWinningMove(board, symbol) {
-    console.log(`findWinningMove called for ${symbol}, board:`, board);
-    for (let combo of wins) {
-      const [a, b, c] = combo;
+    for (let [a, b, c] of wins) {
       const cells = [board[a], board[b], board[c]];
-      const symbolCount = cells.filter(cell => cell === symbol).length;
-      const emptyCount = cells.filter(cell => cell === null).length;
-      
-      if (symbolCount === 2 && emptyCount === 1) {
-        if (board[a] === null) {
-          console.log(`Winning move found: ${a}`);
-          return a;
-        }
-        if (board[b] === null) {
-          console.log(`Winning move found: ${b}`);
-          return b;
-        }
-        if (board[c] === null) {
-          console.log(`Winning move found: ${c}`);
-          return c;
-        }
+      const count = cells.filter(cell => cell === symbol).length;
+      if (count === 2 && cells.includes(null)) {
+        return [a, b, c].find(i => board[i] === null);
       }
     }
-    console.log('No winning move found');
     return null;
   }
 
-  // Find blocking move (block opponent's win)
   function findBlockingMove(board, symbol) {
-    const opponent = symbol === 'X' ? 'O' : 'X';
-    return findWinningMove(board, opponent);
+    return findWinningMove(board, symbol === 'X' ? 'O' : 'X');
   }
 
-  // Get strategic moves in order of preference
-  function getStrategicMoves() {
-    return [4, 0, 2, 6, 8, 1, 3, 5, 7]; // Center, corners, edges
-  }
-
-  // Find best strategic move
   function findStrategicMove(board) {
-    console.log(`findStrategicMove called, board:`, board);
-    const strategicMoves = getStrategicMoves();
-    for (let move of strategicMoves) {
-      if (board[move] === null) {
-        console.log(`Strategic move found: ${move}`);
-        return move;
-      }
+    for (let move of [4, 0, 2, 6, 8, 1, 3, 5, 7]) {
+      if (board[move] === null) return move;
     }
-    console.log('No strategic move found');
     return null;
   }
 
-  // Find random move
   function findRandomMove(board) {
-    const availableMoves = getAvailableMoves(board);
-    if (availableMoves.length === 0) return null;
-    return availableMoves[Math.floor(Math.random() * availableMoves.length)];
+    const moves = getAvailableMoves(board);
+    return moves.length ? moves[Math.floor(Math.random() * moves.length)] : null;
   }
+
+  function minimax(board, player, ai, human, depth = 0, maxDepth = 3) {
+    const availableMoves = getAvailableMoves(board);
+    const winner = checkWinner(board);
+
+    if (winner === human) return { score: -10 + depth };
+    if (winner === ai) return { score: 10 - depth };
+    if (!availableMoves.length || depth >= maxDepth) return { score: 0 };
+
+    let moves = [];
+    for (let move of availableMoves) {
+      const newBoard = [...board];
+      newBoard[move] = player;
+      const result = minimax(newBoard, player === ai ? human : ai, ai, human, depth + 1, maxDepth);
+      moves.push({ index: move, score: result.score });
+    }
+
+    return player === ai
+      ? moves.reduce((best, m) => m.score > best.score ? m : best)
+      : moves.reduce((best, m) => m.score < best.score ? m : best);
+  }
+
+  function ruleBasedMove(board, aiPlayer) {
+    return findWinningMove(board, aiPlayer) ??
+           findBlockingMove(board, aiPlayer) ??
+           findStrategicMove(board) ??
+           findRandomMove(board);
+  }
+
+  const difficultySettings = {
+    easy:    { smartChance: 0.3, minimaxDepth: 0 }, // mostly random
+    medium:  { smartChance: 0.5, minimaxDepth: 2 }, // balanced
+    hard:    { smartChance: 0.9, minimaxDepth: 6 }  // mostly minimax
+  };
 
   return {
     makeMove(board, symbol, difficulty = 'medium') {
+      const { smartChance, minimaxDepth } = difficultySettings[difficulty] || difficultySettings.medium;
+      const aiPlayer = symbol;
+      const humanPlayer = symbol === 'X' ? 'O' : 'X';
+      const availableMoves = getAvailableMoves(board);
+
       console.log(`=== AI MOVE DEBUG ===`);
       console.log(`AI making move for ${symbol} with difficulty: ${difficulty}`);
       console.log(`Board state:`, board);
-      console.log(`Available moves:`, getAvailableMoves(board));
-      
-      // Check if this is the first move (empty board)
-      const availableMoves = getAvailableMoves(board);
-      if (availableMoves.length === 9) {
-        // First move - prefer center for X, random for O
-        if (symbol === 'X' && difficulty !== 'easy') {
-          return 4; // Center is optimal for first player
-        }
+      console.log(`Available moves:`, availableMoves);
+      console.log(`Smart chance: ${smartChance}, Minimax depth: ${minimaxDepth}`);
+
+      if (availableMoves.length === 9 && symbol === 'X' && difficulty !== 'easy') {
+        console.log('First move optimization: choosing center (4)');
+        return 4; // center first move
       }
-      
-      if (difficulty === 'easy') {
-        // Easy AI - mostly random with some basic strategy
-        const availableMoves = getAvailableMoves(board);
-        
-        // 30% chance to make a strategic move
-        if (Math.random() < 0.3) {
-          // Try to win
-          let move = findWinningMove(board, symbol);
-          if (move !== null) return move;
-          
-          // Try to block opponent
-          move = findBlockingMove(board, symbol);
-          if (move !== null) return move;
-          
-          // Try strategic move
-          move = findStrategicMove(board);
-          if (move !== null) return move;
-        }
-        
-        // Random move
-        return findRandomMove(board);
-      }
-      
-      if (difficulty === 'medium') {
-        // Medium AI - balanced strategy
-        
-        // 1. Try to win immediately
-        let move = findWinningMove(board, symbol);
-        if (move !== null) return move;
-        
-        // 2. Block opponent's immediate win
-        move = findBlockingMove(board, symbol);
-        if (move !== null) return move;
-        
-        // 3. Try strategic move
-        move = findStrategicMove(board);
-        if (move !== null) return move;
-        
-        // 4. Random move
-        return findRandomMove(board);
-      }
-      
-      if (difficulty === 'hard') {
-        // Hard AI - nearly unbeatable
-        console.log('Hard AI logic started');
-        
-        // 1. Try to win immediately
-        let move = findWinningMove(board, symbol);
-        if (move !== null) {
-          console.log('Hard AI: Found winning move');
+
+      if (Math.random() < smartChance) {
+        if (minimaxDepth > 0) {
+          console.log(`${difficulty} AI: Using minimax strategy (depth ${minimaxDepth})`);
+          const result = minimax(board, aiPlayer, aiPlayer, humanPlayer, 0, minimaxDepth);
+          const move = result.index ?? findRandomMove(board);
+          console.log(`Minimax chose move: ${move} with score: ${result.score}`);
           return move;
         }
-        console.log('Hard AI: No winning move found');
-        
-        // 2. Block opponent's immediate win
-        move = findBlockingMove(board, symbol);
-        if (move !== null) {
-          console.log('Hard AI: Found blocking move');
-          return move;
-        }
-        console.log('Hard AI: No blocking move needed');
-        
-        // 3. Try to create fork opportunity (two winning ways)
-        for (let moveIndex of getAvailableMoves(board)) {
-          board[moveIndex] = symbol;
-          let winCount = 0;
-          
-          for (let combo of wins) {
-            const [a, b, c] = combo;
-            const cells = [board[a], board[b], board[c]];
-            if (cells.filter(cell => cell === symbol).length === 2 && 
-                cells.filter(cell => cell === null).length === 1) {
-              winCount++;
-            }
-          }
-          
-          board[moveIndex] = null; // Undo move
-          
-          if (winCount >= 2) {
-            return moveIndex;
-          }
-        }
-        
-        // 4. Block opponent's fork
-        const opponent = symbol === 'X' ? 'O' : 'X';
-        for (let moveIndex of getAvailableMoves(board)) {
-          board[moveIndex] = opponent;
-          let winCount = 0;
-          
-          for (let combo of wins) {
-            const [a, b, c] = combo;
-            const cells = [board[a], board[b], board[c]];
-            if (cells.filter(cell => cell === opponent).length === 2 && 
-                cells.filter(cell => cell === null).length === 1) {
-              winCount++;
-            }
-          }
-          
-          board[moveIndex] = null; // Undo move
-          
-          if (winCount >= 2) {
-            return moveIndex;
-          }
-        }
-        
-        // 5. Try strategic move
-        move = findStrategicMove(board);
-        if (move !== null) {
-          console.log('Hard AI: Found strategic move');
-          return move;
-        }
-        console.log('Hard AI: No strategic move found');
-        
-        // 6. Random move
-        console.log('Hard AI: Using random move');
-        return findRandomMove(board);
+        console.log(`${difficulty} AI: Using rule-based strategy`);
+        const move = ruleBasedMove(board, aiPlayer);
+        console.log(`Rule-based chose move: ${move}`);
+        return move;
       }
       
+      console.log(`${difficulty} AI: Using random move`);
+      const move = findRandomMove(board);
+      console.log(`Random chose move: ${move}`);
       console.log(`=== END AI MOVE DEBUG ===`);
-      return findRandomMove(board);
+      return move;
     }
   };
 })();
