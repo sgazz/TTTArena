@@ -744,11 +744,16 @@
       50% { opacity: 1; }
     }
 
-    @keyframes critical-shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-2px); }
-      75% { transform: translateX(2px); }
-    }
+      @keyframes critical-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2px); }
+    75% { transform: translateX(2px); }
+  }
+
+  @keyframes ai-thinking {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.05); }
+  }
 
     /* Footer with Keyboard Shortcuts */
     #footer {

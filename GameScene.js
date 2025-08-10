@@ -130,6 +130,7 @@ class GameScene extends Phaser.Scene {
     this.lastBonus = null;
     this.winningCells = [];
     this.soundEnabled = true;
+    this.aiThinking = false;
     
     // Restore sounds after reset
     this.sounds = savedSounds;
@@ -491,6 +492,8 @@ class GameScene extends Phaser.Scene {
   }
 
   onCellClick(boardIndex, cellIndex) {
+    console.log(`onCellClick called: boardIndex=${boardIndex}, cellIndex=${cellIndex}, currentPlayer=${this.currentPlayer}`);
+    
     if (this.isPaused || !this.gameActive) return;
     if (this.boardFinished[boardIndex]) {
       this.playSound('error');
@@ -1004,6 +1007,8 @@ class GameScene extends Phaser.Scene {
   }
 
   playSound(type) {
+    console.log(`playSound called: type=${type}, soundEnabled=${this.soundEnabled}`);
+    
     // Check if sound is enabled
     if (this.soundEnabled === false) {
       return;
@@ -1074,15 +1079,34 @@ class GameScene extends Phaser.Scene {
   }
 
   maybeTriggerAIMove() {
+    console.log(`maybeTriggerAIMove called: mode=${this.mode}, currentPlayer=${this.currentPlayer}, isPaused=${this.isPaused}, gameActive=${this.gameActive}`);
+    
     if (this.isPaused || !this.gameActive) return;
     
     const aiIsX = (this.mode === 'AIvP');
     const aiIsO = (this.mode === 'PvAI');
 
     const aiTurn = (aiIsX && this.currentPlayer === 'X') || (aiIsO && this.currentPlayer === 'O');
+    console.log(`AI turn check: aiIsX=${aiIsX}, aiIsO=${aiIsO}, aiTurn=${aiTurn}`);
+    
     if (!aiTurn) return;
+    
+    // Prevent multiple AI moves at the same time
+    if (this.aiThinking) {
+      console.log('AI already thinking, skipping...');
+      return;
+    }
+    
+    this.aiThinking = true;
 
-    this.time.delayedCall(300, () => {
+    // Random delay between 500ms and 1000ms for more human-like AI behavior
+    const aiDelay = Math.random() * 500 + 500; // 500-1000ms
+    console.log(`AI thinking for ${aiDelay.toFixed(0)}ms...`);
+    
+    // Show AI thinking indicator
+    this.showAIThinking();
+    
+    this.time.delayedCall(aiDelay, () => {
       if (this.isPaused || !this.gameActive) return;
       
       const board = this.boards[this.currentBoardIndex];
@@ -1090,7 +1114,12 @@ class GameScene extends Phaser.Scene {
       
       const move = TicTacToeAI.makeMove(board.slice(), this.currentPlayer, this.aiDifficulty);
       if (move != null) {
+        console.log(`AI making move: ${this.currentPlayer} at position ${move} on board ${this.currentBoardIndex}`);
+        this.hideAIThinking(); // Hide thinking indicator
+        this.aiThinking = false; // Reset thinking flag
         this.onCellClick(this.currentBoardIndex, move);
+      } else {
+        this.aiThinking = false; // Reset thinking flag even if no move found
       }
     });
   }
@@ -1394,6 +1423,22 @@ class GameScene extends Phaser.Scene {
 
     if (btnStopTournament) {
       btnStopTournament.style.display = isActive ? 'block' : 'none';
+    }
+  }
+
+  showAIThinking() {
+    // Add a subtle pulse effect to the current player indicator
+    const currentPlayerElement = document.querySelector(`.player.${this.currentPlayer.toLowerCase()}`);
+    if (currentPlayerElement) {
+      currentPlayerElement.style.animation = 'ai-thinking 1s ease-in-out infinite';
+    }
+  }
+
+  hideAIThinking() {
+    // Remove the pulse effect
+    const currentPlayerElement = document.querySelector(`.player.${this.currentPlayer.toLowerCase()}`);
+    if (currentPlayerElement) {
+      currentPlayerElement.style.animation = '';
     }
   }
 }
