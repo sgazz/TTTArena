@@ -1348,7 +1348,6 @@ class GameScene extends Phaser.Scene {
   }
 
   startArena() {
-    console.log('startArena() called');
     this.arenaMode = true;
     this.arenaGames = 0;
     this.arenaScore = { X: 0, O: 0, D: 0 };
@@ -1361,7 +1360,6 @@ class GameScene extends Phaser.Scene {
     };
     
     console.log('Starting arena mode');
-    console.log('Arena mode set to:', this.arenaMode);
     this.showArenaInfo();
     this.updateArenaInfo();
     this.updateArenaButtonState(true);
@@ -1369,12 +1367,7 @@ class GameScene extends Phaser.Scene {
   }
 
   startNextArenaGame() {
-    console.log('startNextArenaGame() called');
-    console.log('Current arena games:', this.arenaGames);
-    console.log('Max arena games:', this.maxArenaGames);
-    
     if (this.arenaGames >= this.maxArenaGames) {
-      console.log('Arena games limit reached, ending arena');
       this.endArena();
       return;
     }
@@ -1388,7 +1381,6 @@ class GameScene extends Phaser.Scene {
     // Reset for new game
     this.resetGame();
     this.gameActive = false; // Don't start timer until first move
-    console.log('Next arena game ready');
   }
 
   handleArenaGameEnd(winner) {
@@ -1518,53 +1510,37 @@ class GameScene extends Phaser.Scene {
   }
 
   showArenaInfo() {
-    console.log('showArenaInfo() called');
     // Sakrij dugme i prikaži arena info panel
     const arenaButton = document.getElementById('arena-button');
     const arenaInfo = document.getElementById('arena-info');
     
-    console.log('arenaButton found:', !!arenaButton);
-    console.log('arenaInfo found:', !!arenaInfo);
-    
     if (arenaButton) {
       arenaButton.style.display = 'none';
-      console.log('Arena button hidden');
     }
     if (arenaInfo) {
       arenaInfo.style.display = 'block';
-      console.log('Arena info shown');
     }
     this.updateArenaInfo();
   }
 
   updateArenaInfo() {
-    console.log('updateArenaInfo() called');
     // Ažuriraj HTML arena info panel
     const arenaProgress = document.getElementById('arenaProgress');
     const arenaXWins = document.getElementById('arenaXWins');
     const arenaOWins = document.getElementById('arenaOWins');
     const arenaDraws = document.getElementById('arenaDraws');
     
-    console.log('arenaProgress found:', !!arenaProgress);
-    console.log('arenaXWins found:', !!arenaXWins);
-    console.log('arenaOWins found:', !!arenaOWins);
-    console.log('arenaDraws found:', !!arenaDraws);
-    
     if (arenaProgress) {
       arenaProgress.textContent = `${this.arenaGames}/${this.maxArenaGames}`;
-      console.log('Progress updated to:', `${this.arenaGames}/${this.maxArenaGames}`);
     }
     if (arenaXWins) {
       arenaXWins.textContent = this.arenaScore.X;
-      console.log('X wins updated to:', this.arenaScore.X);
     }
     if (arenaOWins) {
       arenaOWins.textContent = this.arenaScore.O;
-      console.log('O wins updated to:', this.arenaScore.O);
     }
     if (arenaDraws) {
       arenaDraws.textContent = this.arenaScore.D;
-      console.log('Draws updated to:', this.arenaScore.D);
     }
   }
 
@@ -1589,14 +1565,9 @@ class GameScene extends Phaser.Scene {
   }
 
   updateArenaButtonState(isActive) {
-    console.log('updateArenaButtonState() called with isActive:', isActive);
     const arenaButton = document.getElementById('arena-button');
     const btnStopArena = document.getElementById('btnStopArena');
     const arenaStatus = document.getElementById('arenaStatus');
-    
-    console.log('arenaButton found:', !!arenaButton);
-    console.log('btnStopArena found:', !!btnStopArena);
-    console.log('arenaStatus found:', !!arenaStatus);
     
     if (arenaButton) {
       if (isActive) {
@@ -1606,7 +1577,6 @@ class GameScene extends Phaser.Scene {
         if (arenaStatus) {
           arenaStatus.textContent = 'Arena Active';
         }
-        console.log('Arena button set to active');
       } else {
         arenaButton.classList.remove('active');
         arenaButton.classList.remove('disabled');
@@ -1614,13 +1584,11 @@ class GameScene extends Phaser.Scene {
         if (arenaStatus) {
           arenaStatus.textContent = 'Enter Arena';
         }
-        console.log('Arena button set to inactive');
       }
     }
 
     if (btnStopArena) {
       btnStopArena.style.display = isActive ? 'block' : 'none';
-      console.log('Stop arena button display set to:', isActive ? 'block' : 'none');
     }
   }
 
