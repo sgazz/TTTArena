@@ -1179,6 +1179,7 @@ class GameScene extends Phaser.Scene {
   resetArena() {
     this.arenaGames = 0;
     this.arenaScore = { X: 0, O: 0, D: 0 };
+    this.arenaModeType = null;
     this.arenaStats = {
       totalMoves: 0,
       averageGameTime: 0,
@@ -1347,7 +1348,7 @@ class GameScene extends Phaser.Scene {
     console.log(`AI difficulty set to: ${difficulty}`);
   }
 
-  startArena() {
+  startArena(selectedMode) {
     this.arenaMode = true;
     this.arenaGames = 0;
     this.arenaScore = { X: 0, O: 0, D: 0 };
@@ -1359,7 +1360,10 @@ class GameScene extends Phaser.Scene {
       gameHistory: []
     };
     
-    console.log('Starting arena mode');
+    // Set the selected mode for arena
+    this.arenaModeType = selectedMode;
+    console.log('Starting arena mode with mode:', selectedMode);
+    
     this.showArenaInfo();
     this.updateArenaInfo();
     this.updateArenaButtonState(true);
@@ -1378,9 +1382,17 @@ class GameScene extends Phaser.Scene {
     // Ažuriraj arena info
     this.updateArenaInfo();
     
-    // Reset for new game
+    // Reset for new game and set the arena mode
     this.resetGame();
+    this.setMode(this.arenaModeType);
     this.gameActive = false; // Don't start timer until first move
+    
+    // If AI mode, trigger AI move after a short delay
+    if (this.arenaModeType === 'AIvP') {
+      this.time.delayedCall(1000, () => {
+        this.maybeTriggerAIMove();
+      });
+    }
   }
 
   handleArenaGameEnd(winner) {
@@ -1457,6 +1469,7 @@ class GameScene extends Phaser.Scene {
     this.arenaMode = false;
     this.arenaGames = 0;
     this.arenaScore = { X: 0, O: 0, D: 0 };
+    this.arenaModeType = null;
     
     console.log('Arena stopped by user');
     
@@ -1483,10 +1496,10 @@ class GameScene extends Phaser.Scene {
     
     title.textContent = 'Arena Complete!';
     if (winner === 'Tie') {
-      reasonElement.textContent = `Arena ended in a tie!`;
+      reasonElement.textContent = `Arena (${this.arenaModeType}) ended in a tie!`;
       scoreElement.textContent = `Final score - X: ${this.arenaScore.X}, O: ${this.arenaScore.O}, D: ${this.arenaScore.D}`;
     } else {
-      reasonElement.textContent = `${winner} wins the arena!`;
+      reasonElement.textContent = `${winner} wins the arena (${this.arenaModeType})!`;
       scoreElement.textContent = `Final score - X: ${this.arenaScore.X}, O: ${this.arenaScore.O}, D: ${this.arenaScore.D}`;
     }
     
@@ -1542,6 +1555,15 @@ class GameScene extends Phaser.Scene {
     if (arenaDraws) {
       arenaDraws.textContent = this.arenaScore.D;
     }
+    
+    // Update arena info title to show selected mode
+    const arenaInfo = document.getElementById('arena-info');
+    if (arenaInfo && this.arenaModeType) {
+      const title = arenaInfo.querySelector('h3');
+      if (title) {
+        title.textContent = `Arena Progress (${this.arenaModeType})`;
+      }
+    }
   }
 
   hideArenaInfo() {
@@ -1554,6 +1576,11 @@ class GameScene extends Phaser.Scene {
     }
     if (arenaInfo) {
       arenaInfo.style.display = 'none';
+      // Reset title to default
+      const title = arenaInfo.querySelector('h3');
+      if (title) {
+        title.textContent = 'Arena Progress';
+      }
     }
   }
 

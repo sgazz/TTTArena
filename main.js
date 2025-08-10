@@ -224,9 +224,18 @@ window.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      const startArena = await confirmAction('Start arena mode? This will play 5 games and track the overall winner with detailed statistics.');
+      const startArena = await confirmAction('Start arena mode? This will play 5 games and track the overall winner with detailed statistics. You need to select a game mode (PvP/PvAI/AIvP) first.');
       if (startArena) {
-        scene.startArena();
+        // Check if a mode is selected
+        const activeModeButton = document.querySelector('.mode-btn.active');
+        if (!activeModeButton) {
+          alert('Please select a game mode (PvP, PvAI, or AIvP) before starting Arena mode.');
+          return;
+        }
+        
+        const selectedMode = activeModeButton.dataset.mode;
+        console.log('Starting arena mode with selected mode:', selectedMode);
+        scene.startArena(selectedMode);
       }
     };
   }
