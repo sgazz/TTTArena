@@ -1354,8 +1354,9 @@ class GameScene extends Phaser.Scene {
   }
 
   setAIDifficulty(difficulty) {
+    console.log(`setAIDifficulty called with: ${difficulty}`);
     this.aiDifficulty = difficulty;
-    console.log(`AI difficulty set to: ${difficulty}`);
+    console.log(`AI difficulty set to: ${this.aiDifficulty}`);
   }
 
   startArena(selectedMode) {
