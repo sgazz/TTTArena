@@ -58,11 +58,18 @@ class GameScene extends Phaser.Scene {
     // AI difficulty
     this.aiDifficulty = 'medium';
     
-    // Tournament system
-    this.tournamentMode = false;
-    this.tournamentGames = 0;
-    this.tournamentScore = { X: 0, O: 0 };
-    this.maxTournamentGames = 5;
+    // Arena system
+    this.arenaMode = false;
+    this.arenaGames = 0;
+    this.arenaScore = { X: 0, O: 0, D: 0 };
+    this.maxArenaGames = 5;
+    this.arenaStats = {
+      totalMoves: 0,
+      averageGameTime: 0,
+      fastestWin: null,
+      longestGame: null,
+      gameHistory: []
+    };
   }
 
   create() {
@@ -106,7 +113,7 @@ class GameScene extends Phaser.Scene {
     });
 
     this.input.keyboard.on('keydown-R', () => {
-      this.resetTournament();
+      this.resetArena();
     });
 
     if (this.mode === 'AIvP') {
@@ -221,9 +228,9 @@ class GameScene extends Phaser.Scene {
     document.getElementById('timeX').textContent = this.formatTime(this.timers.X);
     document.getElementById('timeO').textContent = this.formatTime(this.timers.O);
     
-    // Update tournament info if in tournament mode
-    if (this.tournamentMode) {
-      this.updateTournamentInfo();
+    // Update arena info if in arena mode
+    if (this.arenaMode) {
+      this.updateArenaInfo();
     }
     
     if (this.lastBonus) {
@@ -319,8 +326,8 @@ class GameScene extends Phaser.Scene {
     // Play error sound for timeout
     this.playSound('error');
     
-    if (this.tournamentMode) {
-      this.handleTournamentGameEnd(winner);
+    if (this.arenaMode) {
+      this.handleArenaGameEnd(winner);
     } else {
       this.onGameComplete(winner);
     }
@@ -746,9 +753,9 @@ class GameScene extends Phaser.Scene {
     
     // Check if all boards are finished (game complete)
     if (this.boardFinished.every(f => f)) {
-      if (this.tournamentMode) {
-        this.handleTournamentGameEnd(winner);
-      } else {
+          if (this.arenaMode) {
+      this.handleArenaGameEnd(winner);
+    } else {
         this.onGameComplete(winner);
       }
     } else {
@@ -782,9 +789,9 @@ class GameScene extends Phaser.Scene {
     
     // Check if all boards are finished (game complete)
     if (this.boardFinished.every(f => f)) {
-      if (this.tournamentMode) {
-        this.handleTournamentGameEnd('D'); // Draw
-      } else {
+          if (this.arenaMode) {
+      this.handleArenaGameEnd('D'); // Draw
+    } else {
         this.onGameComplete('D'); // Draw
       }
     } else {
@@ -1143,11 +1150,11 @@ class GameScene extends Phaser.Scene {
   setMode(m) {
     console.log(`Setting mode to: ${m}`);
     this.mode = m;
-    this.resetTournament();
-
-    // Ako je tournament mode aktivan, prikaži tournament info
-    if (this.tournamentMode) {
-      this.showTournamentInfo();
+        this.resetArena();
+    
+    // Ako je arena mode aktivan, prikaži arena info
+    if (this.arenaMode) {
+      this.showArenaInfo();
     }
 
     if (this.mode === 'AIvP') {
@@ -1160,17 +1167,25 @@ class GameScene extends Phaser.Scene {
     this.drawBoards();
     this.startTimer();
     
-    // Hide tournament info if not in tournament mode
-    if (!this.tournamentMode) {
-      this.hideTournamentInfo();
+    // Hide arena info if not in arena mode
+    if (!this.arenaMode) {
+      this.hideArenaInfo();
     } else {
-      // Ako je tournament mode, ažuriraj tournament info
-      this.updateTournamentInfo();
+      // Ako je arena mode, ažuriraj arena info
+      this.updateArenaInfo();
     }
   }
 
-  resetTournament() {
-    this.resetGame();
+  resetArena() {
+    this.arenaGames = 0;
+    this.arenaScore = { X: 0, O: 0, D: 0 };
+    this.arenaStats = {
+      totalMoves: 0,
+      averageGameTime: 0,
+      fastestWin: null,
+      longestGame: null,
+      gameHistory: []
+    };
   }
 
   maybeTriggerAIMove() {
@@ -1281,7 +1296,7 @@ class GameScene extends Phaser.Scene {
     }
     
     // Reset game state
-    this.resetTournament();
+    this.resetArena();
     
     // Start replay
     this.playNextMove();
@@ -1332,68 +1347,102 @@ class GameScene extends Phaser.Scene {
     console.log(`AI difficulty set to: ${difficulty}`);
   }
 
-  startTournament() {
-    this.tournamentMode = true;
-    this.tournamentGames = 0;
-    this.tournamentScore = { X: 0, O: 0 };
+  startArena() {
+    this.arenaMode = true;
+    this.arenaGames = 0;
+    this.arenaScore = { X: 0, O: 0, D: 0 };
+    this.arenaStats = {
+      totalMoves: 0,
+      averageGameTime: 0,
+      fastestWin: null,
+      longestGame: null,
+      gameHistory: []
+    };
     
-    console.log('Starting tournament mode');
-    this.showTournamentInfo();
-    this.updateTournamentInfo();
-    this.updateTournamentButtonState(true);
-    this.startNextTournamentGame();
+    console.log('Starting arena mode');
+    this.showArenaInfo();
+    this.updateArenaInfo();
+    this.updateArenaButtonState(true);
+    this.startNextArenaGame();
   }
 
-  startNextTournamentGame() {
-    if (this.tournamentGames >= this.maxTournamentGames) {
-      this.endTournament();
+  startNextArenaGame() {
+    if (this.arenaGames >= this.maxArenaGames) {
+      this.endArena();
       return;
     }
 
-    this.tournamentGames++;
-    console.log(`Tournament game ${this.tournamentGames}/${this.maxTournamentGames}`);
+    this.arenaGames++;
+    console.log(`Arena game ${this.arenaGames}/${this.maxArenaGames}`);
     
-    // Ažuriraj tournament info
-    this.updateTournamentInfo();
+    // Ažuriraj arena info
+    this.updateArenaInfo();
     
     // Reset for new game
-    this.resetTournament();
+    this.resetGame();
     this.gameActive = false; // Don't start timer until first move
   }
 
-  handleTournamentGameEnd(winner) {
+  handleArenaGameEnd(winner) {
+    // Update arena score
+    this.arenaScore[winner]++;
+    
+    // Calculate game statistics
+    const gameTime = 120 - (this.timers.X + this.timers.O);
+    const gameStats = {
+      gameNumber: this.arenaGames,
+      winner: winner,
+      gameTime: gameTime,
+      totalMoves: this.moveHistory.length,
+      mode: this.mode
+    };
+    
+    // Update arena statistics
+    this.arenaStats.totalMoves += this.moveHistory.length;
+    this.arenaStats.gameHistory.push(gameStats);
+    
+    // Update fastest win and longest game
     if (winner !== 'D') {
-      this.tournamentScore[winner]++;
+      if (!this.arenaStats.fastestWin || gameTime < this.arenaStats.fastestWin.gameTime) {
+        this.arenaStats.fastestWin = gameStats;
+      }
     }
     
-    console.log(`Game ${this.tournamentGames} ended. Winner: ${winner}`);
-    console.log(`Tournament score: X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`);
+    if (!this.arenaStats.longestGame || gameTime > this.arenaStats.longestGame.gameTime) {
+      this.arenaStats.longestGame = gameStats;
+    }
     
-    // Ažuriraj tournament info
-    this.updateTournamentInfo();
+    // Calculate average game time
+    this.arenaStats.averageGameTime = this.arenaStats.gameHistory.reduce((sum, game) => sum + game.gameTime, 0) / this.arenaStats.gameHistory.length;
+    
+    console.log(`Game ${this.arenaGames} ended. Winner: ${winner}`);
+    console.log(`Arena score: X: ${this.arenaScore.X}, O: ${this.arenaScore.O}, D: ${this.arenaScore.D}`);
+    
+    // Ažuriraj arena info
+    this.updateArenaInfo();
     
     // Show game result
-    this.showTournamentGameResult(winner);
+    this.showArenaGameResult(winner);
     
     // Start next game after delay
     this.time.delayedCall(3000, () => {
-      this.startNextTournamentGame();
+      this.startNextArenaGame();
     });
   }
 
-  showTournamentGameResult(winner) {
+  showArenaGameResult(winner) {
     const gameOverDiv = document.getElementById('gameOver');
     const title = document.getElementById('gameOverTitle');
     const reasonElement = document.getElementById('gameOverReason');
     const scoreElement = document.getElementById('gameOverScore');
     
-    title.textContent = `Game ${this.tournamentGames} Complete`;
+    title.textContent = `Arena Game ${this.arenaGames} Complete`;
     if (winner === 'D') {
-      reasonElement.textContent = `Game ${this.tournamentGames} ended in a draw!`;
-      scoreElement.textContent = `Tournament score - X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`;
+      reasonElement.textContent = `Game ${this.arenaGames} ended in a draw!`;
+      scoreElement.textContent = `Arena score - X: ${this.arenaScore.X}, O: ${this.arenaScore.O}, D: ${this.arenaScore.D}`;
     } else {
-      reasonElement.textContent = `${winner} wins game ${this.tournamentGames}!`;
-      scoreElement.textContent = `Tournament score - X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`;
+      reasonElement.textContent = `${winner} wins arena game ${this.arenaGames}!`;
+      scoreElement.textContent = `Arena score - X: ${this.arenaScore.X}, O: ${this.arenaScore.O}, D: ${this.arenaScore.D}`;
     }
     
     gameOverDiv.style.display = 'block';
@@ -1404,85 +1453,107 @@ class GameScene extends Phaser.Scene {
     }, 2500);
   }
 
-  stopTournament() {
-    this.tournamentMode = false;
-    this.tournamentGames = 0;
-    this.tournamentScore = { X: 0, O: 0 };
+  stopArena() {
+    this.arenaMode = false;
+    this.arenaGames = 0;
+    this.arenaScore = { X: 0, O: 0, D: 0 };
     
-    console.log('Tournament stopped by user');
+    console.log('Arena stopped by user');
     
     // Reset game state
     this.resetGame();
     
-    // Hide tournament info and show button
-    this.hideTournamentInfo();
+    // Hide arena info and show button
+    this.hideArenaInfo();
     
-    // Update tournament button state
-    this.updateTournamentButtonState(false);
+    // Update arena button state
+    this.updateArenaButtonState(false);
   }
 
-  endTournament() {
-    this.tournamentMode = false;
+  endArena() {
+    this.arenaMode = false;
     
-    const winner = this.tournamentScore.X > this.tournamentScore.O ? 'X' : 
-                   this.tournamentScore.O > this.tournamentScore.X ? 'O' : 'Tie';
+    const winner = this.arenaScore.X > this.arenaScore.O ? 'X' : 
+                   this.arenaScore.O > this.arenaScore.X ? 'O' : 'Tie';
     
     const gameOverDiv = document.getElementById('gameOver');
     const title = document.getElementById('gameOverTitle');
     const reasonElement = document.getElementById('gameOverReason');
     const scoreElement = document.getElementById('gameOverScore');
     
-    title.textContent = 'Tournament Complete!';
+    title.textContent = 'Arena Complete!';
     if (winner === 'Tie') {
-      reasonElement.textContent = `Tournament ended in a tie!`;
-      scoreElement.textContent = `Final score - X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`;
+      reasonElement.textContent = `Arena ended in a tie!`;
+      scoreElement.textContent = `Final score - X: ${this.arenaScore.X}, O: ${this.arenaScore.O}, D: ${this.arenaScore.D}`;
     } else {
-      reasonElement.textContent = `${winner} wins the tournament!`;
-      scoreElement.textContent = `Final score - X: ${this.tournamentScore.X}, O: ${this.tournamentScore.O}`;
+      reasonElement.textContent = `${winner} wins the arena!`;
+      scoreElement.textContent = `Final score - X: ${this.arenaScore.X}, O: ${this.arenaScore.O}, D: ${this.arenaScore.D}`;
     }
+    
+    // Add detailed statistics
+    const statsText = `
+      Total moves: ${this.arenaStats.totalMoves}
+      Average game time: ${this.formatTime(this.arenaStats.averageGameTime)}
+      Fastest win: ${this.arenaStats.fastestWin ? `Game ${this.arenaStats.fastestWin.gameNumber} (${this.formatTime(this.arenaStats.fastestWin.gameTime)})` : 'N/A'}
+      Longest game: ${this.arenaStats.longestGame ? `Game ${this.arenaStats.longestGame.gameNumber} (${this.formatTime(this.arenaStats.longestGame.gameTime)})` : 'N/A'}
+    `;
+    
+    scoreElement.innerHTML = scoreElement.textContent + '<br><br>' + statsText;
     
     gameOverDiv.style.display = 'block';
     
-    // Sakrij tournament info i prikaži dugme
-    this.hideTournamentInfo();
+    // Sakrij arena info i prikaži dugme
+    this.hideArenaInfo();
     
-    // Update tournament button state
-    this.updateTournamentButtonState(false);
+    // Update arena button state
+    this.updateArenaButtonState(false);
   }
 
-  showTournamentInfo() {
-    // Sakrij dugme i prikaži tournament info panel
-    const tournamentButton = document.getElementById('tournament-button');
-    const tournamentInfo = document.getElementById('tournament-info');
+  showArenaInfo() {
+    // Sakrij dugme i prikaži arena info panel
+    const arenaButton = document.getElementById('arena-button');
+    const arenaInfo = document.getElementById('arena-info');
     
-    if (tournamentButton) {
-      tournamentButton.style.display = 'none';
+    if (arenaButton) {
+      arenaButton.style.display = 'none';
     }
-    if (tournamentInfo) {
-      tournamentInfo.style.display = 'block';
+    if (arenaInfo) {
+      arenaInfo.style.display = 'block';
     }
-    this.updateTournamentInfo();
+    this.updateArenaInfo();
   }
 
-  updateTournamentInfo() {
-    // Ažuriraj HTML tournament info panel
-    const tournamentProgress = document.getElementById('tournamentProgress');
+  updateArenaInfo() {
+    // Ažuriraj HTML arena info panel
+    const arenaProgress = document.getElementById('arenaProgress');
+    const arenaXWins = document.getElementById('arenaXWins');
+    const arenaOWins = document.getElementById('arenaOWins');
+    const arenaDraws = document.getElementById('arenaDraws');
     
-    if (tournamentProgress) {
-      tournamentProgress.textContent = `${this.tournamentGames}/${this.maxTournamentGames}`;
+    if (arenaProgress) {
+      arenaProgress.textContent = `${this.arenaGames}/${this.maxArenaGames}`;
+    }
+    if (arenaXWins) {
+      arenaXWins.textContent = this.arenaScore.X;
+    }
+    if (arenaOWins) {
+      arenaOWins.textContent = this.arenaScore.O;
+    }
+    if (arenaDraws) {
+      arenaDraws.textContent = this.arenaScore.D;
     }
   }
 
-  hideTournamentInfo() {
-    // Prikaži dugme i sakrij tournament info panel
-    const tournamentButton = document.getElementById('tournament-button');
-    const tournamentInfo = document.getElementById('tournament-info');
+  hideArenaInfo() {
+    // Prikaži dugme i sakrij arena info panel
+    const arenaButton = document.getElementById('arena-button');
+    const arenaInfo = document.getElementById('arena-info');
     
-    if (tournamentButton) {
-      tournamentButton.style.display = 'block';
+    if (arenaButton) {
+      arenaButton.style.display = 'block';
     }
-    if (tournamentInfo) {
-      tournamentInfo.style.display = 'none';
+    if (arenaInfo) {
+      arenaInfo.style.display = 'none';
     }
   }
 
@@ -1493,31 +1564,31 @@ class GameScene extends Phaser.Scene {
     }
   }
 
-  updateTournamentButtonState(isActive) {
-    const tournamentButton = document.getElementById('tournament-button');
-    const btnStopTournament = document.getElementById('btnStopTournament');
-    const tournamentStatus = document.getElementById('tournamentStatus');
+  updateArenaButtonState(isActive) {
+    const arenaButton = document.getElementById('arena-button');
+    const btnStopArena = document.getElementById('btnStopArena');
+    const arenaStatus = document.getElementById('arenaStatus');
     
-    if (tournamentButton) {
+    if (arenaButton) {
       if (isActive) {
-        tournamentButton.classList.add('active');
-        tournamentButton.classList.remove('disabled');
-        tournamentButton.title = 'Tournament in progress (Ctrl+Shift+T to stop)';
-        if (tournamentStatus) {
-          tournamentStatus.textContent = 'Tournament Active';
+        arenaButton.classList.add('active');
+        arenaButton.classList.remove('disabled');
+        arenaButton.title = 'Arena in progress (Ctrl+Shift+A to stop)';
+        if (arenaStatus) {
+          arenaStatus.textContent = 'Arena Active';
         }
       } else {
-        tournamentButton.classList.remove('active');
-        tournamentButton.classList.remove('disabled');
-        tournamentButton.title = 'Start tournament mode (Ctrl+T)';
-        if (tournamentStatus) {
-          tournamentStatus.textContent = 'Play Tournament';
+        arenaButton.classList.remove('active');
+        arenaButton.classList.remove('disabled');
+        arenaButton.title = 'Start arena mode (Ctrl+A)';
+        if (arenaStatus) {
+          arenaStatus.textContent = 'Enter Arena';
         }
       }
     }
 
-    if (btnStopTournament) {
-      btnStopTournament.style.display = isActive ? 'block' : 'none';
+    if (btnStopArena) {
+      btnStopArena.style.display = isActive ? 'block' : 'none';
     }
   }
 

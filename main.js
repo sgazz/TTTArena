@@ -207,67 +207,67 @@ window.addEventListener('DOMContentLoaded', () => {
     };
   });
 
-  // Tournament button click handler
-  const tournamentButton = document.getElementById('tournament-button');
-  const btnStopTournament = document.getElementById('btnStopTournament');
+  // Arena button click handler
+  const arenaButton = document.getElementById('arena-button');
+  const btnStopArena = document.getElementById('btnStopArena');
   
-  if (tournamentButton) {
-    tournamentButton.onclick = async () => {
+  if (arenaButton) {
+    arenaButton.onclick = async () => {
       const scene = getGameScene();
       if (!scene) return;
 
       // Check if game is in progress
       if (scene.gameActive && !scene.isPaused) {
-        const continueAnyway = await confirmAction('Game is in progress. Do you want to start tournament anyway? This will reset the current game.');
+        const continueAnyway = await confirmAction('Game is in progress. Do you want to start arena mode anyway? This will reset the current game.');
         if (!continueAnyway) {
           return;
         }
       }
 
-      const startTournament = await confirmAction('Start tournament mode? This will play 5 games and track the overall winner.');
-      if (startTournament) {
-        scene.startTournament();
-        updateTournamentButtonState(true);
+      const startArena = await confirmAction('Start arena mode? This will play 5 games and track the overall winner with detailed statistics.');
+      if (startArena) {
+        scene.startArena();
+        updateArenaButtonState(true);
       }
     };
   }
 
-  if (btnStopTournament) {
-    btnStopTournament.onclick = async () => {
+  if (btnStopArena) {
+    btnStopArena.onclick = async () => {
       const scene = getGameScene();
       if (!scene) return;
 
-      const stopTournament = await confirmAction('Stop tournament? This will end the current tournament.');
-      if (stopTournament) {
-        scene.stopTournament();
-        updateTournamentButtonState(false);
+      const stopArena = await confirmAction('Stop arena? This will end the current arena session.');
+      if (stopArena) {
+        scene.stopArena();
+        updateArenaButtonState(false);
       }
     };
   }
 
-  function updateTournamentButtonState(isActive) {
-    const tournamentStatus = document.getElementById('tournamentStatus');
+  function updateArenaButtonState(isActive) {
+    const arenaStatus = document.getElementById('arenaStatus');
     
-    if (tournamentButton) {
+    if (arenaButton) {
       if (isActive) {
-        tournamentButton.classList.add('active');
-        tournamentButton.classList.remove('disabled');
-        tournamentButton.title = 'Tournament in progress (Ctrl+Shift+T to stop)';
-        if (tournamentStatus) {
-          tournamentStatus.textContent = 'Tournament Active';
+        arenaButton.classList.add('active');
+        arenaButton.classList.remove('disabled');
+        arenaButton.title = 'Arena in progress (Ctrl+Shift+A to stop)';
+        if (arenaStatus) {
+          arenaStatus.textContent = 'Arena Active';
         }
       } else {
-        tournamentButton.classList.remove('active');
-        tournamentButton.classList.remove('disabled');
-        tournamentButton.title = 'Start tournament mode (Ctrl+T)';
-        if (tournamentStatus) {
-          tournamentStatus.textContent = 'Play Tournament';
+        arenaButton.classList.remove('active');
+        arenaButton.classList.remove('disabled');
+        arenaButton.title = 'Start arena mode (Ctrl+A)';
+        if (arenaStatus) {
+          arenaStatus.textContent = 'Enter Arena';
         }
       }
     }
 
-    if (btnStopTournament) {
-      btnStopTournament.style.display = isActive ? 'block' : 'none';
+    if (btnStopArena) {
+      btnStopArena.style.display = isActive ? 'block' : 'none';
     }
   }
 
@@ -367,18 +367,18 @@ window.addEventListener('DOMContentLoaded', () => {
           setActiveMode(btnAIvP);
         }
         break;
-      case 't':
-      case 'T':
+      case 'a':
+      case 'A':
         if (event.ctrlKey) {
           event.preventDefault();
           if (event.shiftKey) {
-            // Stop tournament
-            if (btnStopTournament && btnStopTournament.style.display !== 'none') {
-              btnStopTournament.click();
+            // Stop arena
+            if (btnStopArena && btnStopArena.style.display !== 'none') {
+              btnStopArena.click();
             }
           } else {
-            // Start tournament
-            tournamentButton.click();
+            // Start arena
+            arenaButton.click();
           }
         }
         break;

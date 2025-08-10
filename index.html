@@ -480,8 +480,8 @@
       box-shadow: var(--crt-border-glow);
     }
 
-    /* Tournament Button - now part of UI panel */
-    #tournament-button { 
+    /* Arena Button - now part of UI panel */
+    #arena-button { 
       background: var(--crt-bg-dark);
       padding: 12px;
       border: 2px solid var(--crt-green);
@@ -501,9 +501,7 @@
       margin-top: 8px;
     }
 
-
-
-    #tournament-button .status { 
+    #arena-button .status { 
       font-size: 11px;
       color: var(--crt-green);
       text-transform: uppercase;
@@ -511,26 +509,24 @@
       font-weight: 700;
     }
 
-    #tournament-button.active {
+    #arena-button.active {
       background: var(--crt-green-dark);
       border-color: var(--crt-green);
       box-shadow: var(--crt-border-glow);
     }
 
-    #tournament-button.active .status {
+    #arena-button.active .status {
       color: var(--crt-bg-dark);
     }
 
-    #tournament-button.disabled {
+    #arena-button.disabled {
       opacity: 0.5;
       cursor: not-allowed;
       border-color: var(--crt-green-dim);
     }
 
-
-
-    /* Tournament Info - now part of UI panel */
-    #tournament-info { 
+    /* Arena Info - now part of UI panel */
+    #arena-info { 
       background: var(--crt-bg-dark);
       padding: 12px;
       border: 2px solid var(--crt-green);
@@ -548,7 +544,7 @@
       margin-top: 8px;
     }
 
-    #tournament-info h3 { 
+    #arena-info h3 { 
       margin: 0 0 5px 0;
       font-size: 11px;
       text-transform: uppercase;
@@ -556,14 +552,41 @@
       color: var(--crt-green);
     }
 
-    #tournament-info .progress { 
+    #arena-info .progress { 
       font-size: 9px;
       color: var(--crt-green-dim);
       text-transform: uppercase;
       letter-spacing: 1px;
+      margin-bottom: 8px;
     }
 
-    #btnStopTournament {
+    .arena-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 9px;
+      color: var(--crt-green-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-label {
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-weight: 700;
+      color: var(--crt-green);
+    }
+
+    #btnStopArena {
       margin-top: 8px;
       padding: 4px 8px;
       font-size: 9px;
@@ -912,15 +935,29 @@
     <button id="btnReplay" disabled>Replay</button>
     <button id="btnSound">SOUND ON/OFF</button>
     
-    <!-- Tournament elements moved here -->
-    <div id="tournament-button">
-      <div class="status" id="tournamentStatus">Play Tournament</div>
+    <!-- Arena elements moved here -->
+    <div id="arena-button">
+      <div class="status" id="arenaStatus">Enter Arena</div>
     </div>
 
-    <div id="tournament-info" style="display: none;">
-      <h3>Progress</h3>
-      <div class="progress" id="tournamentProgress">0/5</div>
-      <button id="btnStopTournament" style="display: none;">Stop</button>
+    <div id="arena-info" style="display: none;">
+      <h3>Arena Progress</h3>
+      <div class="progress" id="arenaProgress">0/5</div>
+      <div class="arena-stats" id="arenaStats">
+        <div class="stat-item">
+          <span class="stat-label">X Wins:</span>
+          <span class="stat-value" id="arenaXWins">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">O Wins:</span>
+          <span class="stat-value" id="arenaOWins">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Draws:</span>
+          <span class="stat-value" id="arenaDraws">0</span>
+        </div>
+      </div>
+      <button id="btnStopArena" style="display: none;">Stop Arena</button>
     </div>
   </div>
 
@@ -982,7 +1019,7 @@
       <span class="shortcut-item"><span class="key">CTRL+N</span> New Game</span>
       <span class="shortcut-item"><span class="key">CTRL+R</span> Reset</span>
       <span class="shortcut-item"><span class="key">CTRL+1/2/3</span> Modes</span>
-      <span class="shortcut-item"><span class="key">CTRL+T</span> Tournament</span>
+      <span class="shortcut-item"><span class="key">CTRL+A</span> Arena</span>
       <span class="shortcut-item"><span class="key">CTRL+S</span> Sound</span>
       <span class="shortcut-item"><span class="key">CTRL+H</span> Hide Help</span>
     </div>
