@@ -90,10 +90,9 @@ class GameScene extends Phaser.Scene {
     this.updateSemafor();
     console.log('Semafor updated');
     
-    // Start timer and activate game
-    this.gameActive = true;
-    this.startTimer();
-    console.log('Game ready - timer started');
+    // Don't start timer until mode is selected
+    this.gameActive = false;
+    console.log('Game ready - waiting for mode selection');
     console.log('Initial AI difficulty:', this.aiDifficulty);
     
     // Set initial AI difficulty based on active button
@@ -162,7 +161,7 @@ class GameScene extends Phaser.Scene {
     }
     
     this.timerEvent = this.time.addEvent({
-      delay: 1000,
+      delay: 100, // Update every 100ms for more precise timing
       callback: this.updateTimer,
       callbackScope: this,
       loop: true,
@@ -173,7 +172,18 @@ class GameScene extends Phaser.Scene {
   updateTimer() {
     if (!this.gameActive || this.isPaused) return;
     
-    console.log(`Timer update: ${this.currentPlayer} has ${this.timers[this.currentPlayer]}s`);
+    // Check if any player has reached 0:00 and trigger timeout
+    if (this.timers.X <= 0) {
+      console.log(`Timer timeout for X (0:00 reached)`);
+      this.onTimeOut();
+      return;
+    }
+    
+    if (this.timers.O <= 0) {
+      console.log(`Timer timeout for O (0:00 reached)`);
+      this.onTimeOut();
+      return;
+    }
     
     // Prevent timer from going below 0
     if (this.timers[this.currentPlayer] <= 0) {
@@ -182,7 +192,14 @@ class GameScene extends Phaser.Scene {
       return;
     }
     
-    this.timers[this.currentPlayer] -= 1;
+    // Decrease timer by 0.1 seconds (more precise)
+    this.timers[this.currentPlayer] -= 0.1;
+    
+    // Only log every second to avoid spam
+    if (Math.floor(this.timers[this.currentPlayer] * 10) % 10 === 0) {
+      console.log(`Timer update: ${this.currentPlayer} has ${this.timers[this.currentPlayer].toFixed(2)}s`);
+    }
+    
     this.updateSemafor();
     
     // Animate timer when critical (< 10s)
@@ -237,48 +254,60 @@ class GameScene extends Phaser.Scene {
     if (this.arenaMode) {
       this.updateArenaInfo();
     }
+  }
+
+  setBonusInfo(bonusMessage) {
+    if (this.lastBonus) return; // Don't set bonus if already set
     
-    if (this.lastBonus) {
-      console.log('Setting bonus info:', this.lastBonus);
-      
+    this.lastBonus = bonusMessage;
+    console.log('Setting bonus info:', this.lastBonus);
+    
+    // Function to set bonus info when DOM is ready
+    const setBonusWhenReady = () => {
       // Determine which player gets the bonus based on the bonus message
       let bonusElement;
       if (this.lastBonus.includes('X')) {
         bonusElement = document.getElementById('bonusInfoX');
-        console.log('Setting bonus for X player');
+        console.log('Setting bonus for X player, element:', bonusElement);
       } else if (this.lastBonus.includes('O')) {
         bonusElement = document.getElementById('bonusInfoO');
-        console.log('Setting bonus for O player');
+        console.log('Setting bonus for O player, element:', bonusElement);
       } else {
         // For general bonuses (like draws), show on both
         const bonusElementX = document.getElementById('bonusInfoX');
         const bonusElementO = document.getElementById('bonusInfoO');
         
         console.log('Setting bonus for both players (general bonus)');
-        bonusElementX.textContent = this.lastBonus;
-        bonusElementO.textContent = this.lastBonus;
+        if (bonusElementX) bonusElementX.textContent = this.lastBonus;
+        if (bonusElementO) bonusElementO.textContent = this.lastBonus;
         
         // Animate both bonus info elements
         [bonusElementX, bonusElementO].forEach(element => {
-          element.style.color = '#ffcc66';
-          element.style.fontWeight = 'bold';
-          element.style.fontSize = '14px';
+          if (element) {
+            element.style.color = '#ffcc66';
+            element.style.fontWeight = 'bold';
+            element.style.fontSize = '14px';
+          }
         });
         
         // Clear both bonus info after 2 seconds with fade effect
         setTimeout(() => {
           console.log('Clearing bonus info after 2 seconds');
           [bonusElementX, bonusElementO].forEach(element => {
-            element.style.transition = 'opacity 0.5s';
-            element.style.opacity = '0';
+            if (element) {
+              element.style.transition = 'opacity 0.5s';
+              element.style.opacity = '0';
+            }
           });
           setTimeout(() => {
             [bonusElementX, bonusElementO].forEach(element => {
-              element.textContent = '';
-              element.style.opacity = '1';
-              element.style.color = '#aaa';
-              element.style.fontWeight = 'normal';
-              element.style.fontSize = '12px';
+              if (element) {
+                element.textContent = '';
+                element.style.opacity = '1';
+                element.style.color = '#aaa';
+                element.style.fontWeight = 'normal';
+                element.style.fontSize = '12px';
+              }
             });
             this.lastBonus = null;
             console.log('Bonus info cleared');
@@ -287,29 +316,42 @@ class GameScene extends Phaser.Scene {
         return;
       }
       
-      console.log('Setting bonus for specific player:', bonusElement);
-      bonusElement.textContent = this.lastBonus;
-      
-      // Animate bonus info
-      bonusElement.style.color = '#ffcc66';
-      bonusElement.style.fontWeight = 'bold';
-      bonusElement.style.fontSize = '14px';
-      
-      // Clear bonus info after 2 seconds with fade effect
-      setTimeout(() => {
-        console.log('Clearing bonus info after 2 seconds');
-        bonusElement.style.transition = 'opacity 0.5s';
-        bonusElement.style.opacity = '0';
+      if (bonusElement) {
+        console.log('Setting bonus for specific player:', bonusElement);
+        bonusElement.textContent = this.lastBonus;
+        
+        // Animate bonus info
+        bonusElement.style.color = '#ffcc66';
+        bonusElement.style.fontWeight = 'bold';
+        bonusElement.style.fontSize = '14px';
+        
+        // Clear bonus info after 2 seconds with fade effect
         setTimeout(() => {
-          bonusElement.textContent = '';
-          bonusElement.style.opacity = '1';
-          bonusElement.style.color = '#aaa';
-          bonusElement.style.fontWeight = 'normal';
-          bonusElement.style.fontSize = '12px';
-          this.lastBonus = null;
-          console.log('Bonus info cleared');
-        }, 500);
-      }, 2000);
+          console.log('Clearing bonus info after 2 seconds');
+          bonusElement.style.transition = 'opacity 0.5s';
+          bonusElement.style.opacity = '0';
+          setTimeout(() => {
+            bonusElement.textContent = '';
+            bonusElement.style.opacity = '1';
+            bonusElement.style.color = '#aaa';
+            bonusElement.style.fontWeight = 'normal';
+            bonusElement.style.fontSize = '12px';
+            this.lastBonus = null;
+            console.log('Bonus info cleared');
+          }, 500);
+        }, 2000);
+      } else {
+        console.log('Bonus element not found!');
+        this.lastBonus = null;
+      }
+    };
+    
+    // Try to set bonus info immediately
+    setBonusWhenReady();
+    
+    // If elements are not found, try again after a short delay
+    if (!document.getElementById('bonusInfoX') || !document.getElementById('bonusInfoO')) {
+      setTimeout(setBonusWhenReady, 200);
     }
   }
 
@@ -320,8 +362,9 @@ class GameScene extends Phaser.Scene {
     }
     
     const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    const remainingSeconds = Math.floor(seconds % 60);
+    const decimals = Math.floor((seconds % 1) * 100); // Get 2 decimal places
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}.${decimals.toString().padStart(2, '0')}`;
   }
 
   onTimeOut() {
@@ -748,12 +791,11 @@ class GameScene extends Phaser.Scene {
     this.timers[loser] = Math.max(0, this.timers[loser] - 10); // Prevent negative time
     
     console.log(`Timer adjustments for win:`);
-    console.log(`  ${winner}: ${oldWinnerTime}s → ${this.timers[winner]}s (+15)`);
-    console.log(`  ${loser}: ${oldLoserTime}s → ${this.timers[loser]}s (-10)`);
+    console.log(`  ${winner}: ${oldWinnerTime.toFixed(2)}s → ${this.timers[winner].toFixed(2)}s (+15)`);
+    console.log(`  ${loser}: ${oldLoserTime.toFixed(2)}s → ${this.timers[loser].toFixed(2)}s (-10)`);
     
     // Update semafor
-    this.lastBonus = `${winner} +15s, ${loser} -10s`;
-    console.log('Board win - setting lastBonus:', this.lastBonus);
+    this.setBonusInfo(`${winner} +15s, ${loser} -10s`);
     this.updateSemafor();
     
     // Check if all boards are finished (game complete)
@@ -784,12 +826,11 @@ class GameScene extends Phaser.Scene {
     this.timers.O += 5;
     
     console.log(`Timer adjustments for draw:`);
-    console.log(`  X: ${oldXTime}s → ${this.timers.X}s (+5)`);
-    console.log(`  O: ${oldOTime}s → ${this.timers.O}s (+5)`);
+    console.log(`  X: ${oldXTime.toFixed(2)}s → ${this.timers.X.toFixed(2)}s (+5)`);
+    console.log(`  O: ${oldOTime.toFixed(2)}s → ${this.timers.O.toFixed(2)}s (+5)`);
     
     // Update semafor
-    this.lastBonus = 'Draw: X +5s, O +5s';
-    console.log('Board draw - setting lastBonus:', this.lastBonus);
+    this.setBonusInfo('Draw: X +5s, O +5s');
     this.updateSemafor();
     
     // Check if all boards are finished (game complete)
@@ -1156,6 +1197,13 @@ class GameScene extends Phaser.Scene {
     console.log(`Setting mode to: ${m}`);
     this.mode = m;
     
+    // Start timer and activate game when mode is selected
+    if (!this.gameActive) {
+      this.gameActive = true;
+      this.startTimer();
+      console.log('Game activated - timer started');
+    }
+    
     // Only reset arena if not in arena mode
     if (!this.arenaMode) {
       this.resetArena();
@@ -1199,17 +1247,27 @@ class GameScene extends Phaser.Scene {
   }
 
   maybeTriggerAIMove() {
-    console.log(`maybeTriggerAIMove called: mode=${this.mode}, currentPlayer=${this.currentPlayer}, isPaused=${this.isPaused}, gameActive=${this.gameActive}`);
+    console.log(`=== AI TURN DEBUG ===`);
+    console.log(`Mode: ${this.mode} (${this.mode === 'PvP' ? 'Player vs Player' : this.mode === 'PvAI' ? 'Player vs AI' : 'AI vs Player'})`);
+    console.log(`Current player: ${this.currentPlayer}`);
+    console.log(`Game paused: ${this.isPaused}, Game active: ${this.gameActive}`);
     
-    if (this.isPaused || !this.gameActive) return;
+    if (this.isPaused || !this.gameActive) {
+      this.aiThinking = false; // Reset if game is paused or not active
+      return;
+    }
     
     const aiIsX = (this.mode === 'AIvP');
     const aiIsO = (this.mode === 'PvAI');
 
     const aiTurn = (aiIsX && this.currentPlayer === 'X') || (aiIsO && this.currentPlayer === 'O');
-    console.log(`AI turn check: aiIsX=${aiIsX}, aiIsO=${aiIsO}, aiTurn=${aiTurn}`);
+    console.log(`AI controls X: ${aiIsX}, AI controls O: ${aiIsO}, Is AI turn: ${aiTurn}`);
+    console.log(`=== END AI DEBUG ===`);
     
-    if (!aiTurn) return;
+    if (!aiTurn) {
+      this.aiThinking = false; // Reset if not AI turn
+      return;
+    }
     
     // Prevent multiple AI moves at the same time
     if (this.aiThinking) {
@@ -1219,6 +1277,15 @@ class GameScene extends Phaser.Scene {
     
     this.aiThinking = true;
 
+    // Pause timer while AI is thinking
+    if (this.timerEvent) {
+      this.timerEvent.paused = true;
+    }
+
+    // Record start time for AI thinking
+    const aiStartTime = Date.now();
+    console.log(`AI thinking started at: ${aiStartTime}`);
+
     // Random delay between 500ms and 1000ms for more human-like AI behavior
     const aiDelay = Math.random() * 500 + 500; // 500-1000ms
     console.log(`AI thinking for ${aiDelay.toFixed(0)}ms...`);
@@ -1227,19 +1294,58 @@ class GameScene extends Phaser.Scene {
     this.showAIThinking();
     
     this.time.delayedCall(aiDelay, () => {
-      if (this.isPaused || !this.gameActive) return;
+      // Resume timer after AI thinking
+      if (this.timerEvent) {
+        this.timerEvent.paused = false;
+      }
+      
+      if (this.isPaused || !this.gameActive) {
+        // Calculate actual thinking time even if game is paused
+        const aiEndTime = Date.now();
+        const actualThinkingTime = (aiEndTime - aiStartTime) / 1000; // Convert to seconds
+        this.timers[this.currentPlayer] -= actualThinkingTime;
+        console.log(`AI thinking took ${actualThinkingTime.toFixed(2)}s (game paused), deducted from ${this.currentPlayer}'s timer`);
+        this.aiThinking = false;
+        return;
+      }
       
       const board = this.boards[this.currentBoardIndex];
-      if (this.boardFinished[this.currentBoardIndex]) return;
+      if (this.boardFinished[this.currentBoardIndex]) {
+        this.aiThinking = false;
+        return;
+      }
       
       console.log(`Calling AI with difficulty: ${this.aiDifficulty}, player: ${this.currentPlayer}`);
+      console.log(`Current AI difficulty value: "${this.aiDifficulty}"`);
       const move = TicTacToeAI.makeMove(board.slice(), this.currentPlayer, this.aiDifficulty);
       if (move != null) {
+        // Calculate actual thinking time and deduct from timer only if timer is positive
+        const aiEndTime = Date.now();
+        const actualThinkingTime = (aiEndTime - aiStartTime) / 1000; // Convert to seconds
+        
+        if (this.timers[this.currentPlayer] > 0) {
+          this.timers[this.currentPlayer] -= actualThinkingTime;
+          console.log(`AI thinking took ${actualThinkingTime.toFixed(2)}s, deducted from ${this.currentPlayer}'s timer`);
+        } else {
+          console.log(`AI thinking took ${actualThinkingTime.toFixed(2)}s, but ${this.currentPlayer}'s timer is already at/below 0`);
+        }
+        
         console.log(`AI making move: ${this.currentPlayer} at position ${move} on board ${this.currentBoardIndex}`);
         this.hideAIThinking(); // Hide thinking indicator
         this.aiThinking = false; // Reset thinking flag
         this.onCellClick(this.currentBoardIndex, move);
       } else {
+        // Calculate actual thinking time even if no move found
+        const aiEndTime = Date.now();
+        const actualThinkingTime = (aiEndTime - aiStartTime) / 1000; // Convert to seconds
+        
+        if (this.timers[this.currentPlayer] > 0) {
+          this.timers[this.currentPlayer] -= actualThinkingTime;
+          console.log(`AI thinking took ${actualThinkingTime.toFixed(2)}s (no move), deducted from ${this.currentPlayer}'s timer`);
+        } else {
+          console.log(`AI thinking took ${actualThinkingTime.toFixed(2)}s (no move), but ${this.currentPlayer}'s timer is already at/below 0`);
+        }
+        
         this.aiThinking = false; // Reset thinking flag even if no move found
       }
     });

@@ -193,16 +193,21 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // AI difficulty buttons
   const aiButtons = document.querySelectorAll('.ai-btn');
+  console.log('Found AI buttons:', aiButtons.length);
   aiButtons.forEach(btn => {
     btn.onclick = () => {
+      console.log('AI button clicked:', btn.dataset.level);
       // Remove active class from all buttons
       aiButtons.forEach(b => b.classList.remove('active'));
       // Add active class to clicked button
       btn.classList.add('active');
       
       const scene = getGameScene();
+      console.log('Scene from getGameScene:', scene);
       if (scene) {
         scene.setAIDifficulty(btn.dataset.level);
+      } else {
+        console.log('No scene found!');
       }
     };
   });
@@ -382,8 +387,8 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Set initial active mode
-  setActiveMode(btnPvP);
+  // Set initial active mode - commented out to let user choose
+  // setActiveMode(btnPvP);
 
   // Add click handler for pause overlay
   const pauseOverlay = document.getElementById('pauseOverlay');
