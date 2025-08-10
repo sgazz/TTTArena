@@ -208,8 +208,12 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // Arena button click handler
+  console.log('Setting up arena button handlers...');
   const arenaButton = document.getElementById('arena-button');
   const btnStopArena = document.getElementById('btnStopArena');
+  
+  console.log('arenaButton found in main.js:', !!arenaButton);
+  console.log('btnStopArena found in main.js:', !!btnStopArena);
   
   if (arenaButton) {
     arenaButton.onclick = async () => {
