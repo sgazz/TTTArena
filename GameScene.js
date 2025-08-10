@@ -1369,7 +1369,12 @@ class GameScene extends Phaser.Scene {
   }
 
   startNextArenaGame() {
+    console.log('startNextArenaGame() called');
+    console.log('Current arena games:', this.arenaGames);
+    console.log('Max arena games:', this.maxArenaGames);
+    
     if (this.arenaGames >= this.maxArenaGames) {
+      console.log('Arena games limit reached, ending arena');
       this.endArena();
       return;
     }
@@ -1383,6 +1388,7 @@ class GameScene extends Phaser.Scene {
     // Reset for new game
     this.resetGame();
     this.gameActive = false; // Don't start timer until first move
+    console.log('Next arena game ready');
   }
 
   handleArenaGameEnd(winner) {
