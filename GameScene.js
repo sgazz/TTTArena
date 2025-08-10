@@ -94,6 +94,14 @@ class GameScene extends Phaser.Scene {
     this.gameActive = true;
     this.startTimer();
     console.log('Game ready - timer started');
+    console.log('Initial AI difficulty:', this.aiDifficulty);
+    
+    // Set initial AI difficulty based on active button
+    const activeAIBtn = document.querySelector('.ai-btn.active');
+    if (activeAIBtn) {
+      this.aiDifficulty = activeAIBtn.dataset.level;
+      console.log('AI difficulty set from active button:', this.aiDifficulty);
+    }
 
     this.input.on('pointerdown', (pointer) => {
       this.handlePointer(pointer);
@@ -1224,6 +1232,7 @@ class GameScene extends Phaser.Scene {
       const board = this.boards[this.currentBoardIndex];
       if (this.boardFinished[this.currentBoardIndex]) return;
       
+      console.log(`Calling AI with difficulty: ${this.aiDifficulty}, player: ${this.currentPlayer}`);
       const move = TicTacToeAI.makeMove(board.slice(), this.currentPlayer, this.aiDifficulty);
       if (move != null) {
         console.log(`AI making move: ${this.currentPlayer} at position ${move} on board ${this.currentBoardIndex}`);
