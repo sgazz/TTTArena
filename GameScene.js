@@ -136,7 +136,8 @@ class GameScene extends Phaser.Scene {
       delay: 1000,
       callback: this.updateTimer,
       callbackScope: this,
-      loop: true
+      loop: true,
+      paused: this.isPaused
     });
   }
 
@@ -384,6 +385,8 @@ class GameScene extends Phaser.Scene {
   }
 
   handlePointer(pointer) {
+    if (this.isPaused || !this.gameActive) return;
+    
     for (let mini of this.minis) {
       if (this.boardFinished[mini.index]) continue;
       if (mini.index !== this.currentBoardIndex) continue;
@@ -443,6 +446,7 @@ class GameScene extends Phaser.Scene {
   }
 
   onCellClick(boardIndex, cellIndex) {
+    if (this.isPaused || !this.gameActive) return;
     if (this.boardFinished[boardIndex]) return;
     const board = this.boards[boardIndex];
     if (board[cellIndex]) return;
@@ -809,7 +813,7 @@ class GameScene extends Phaser.Scene {
   }
 
   maybeTriggerAIMove() {
-    if (this.isPaused) return;
+    if (this.isPaused || !this.gameActive) return;
     
     const aiIsX = (this.mode === 'AIvP');
     const aiIsO = (this.mode === 'PvAI');
@@ -818,7 +822,7 @@ class GameScene extends Phaser.Scene {
     if (!aiTurn) return;
 
     this.time.delayedCall(300, () => {
-      if (this.isPaused) return;
+      if (this.isPaused || !this.gameActive) return;
       
       const board = this.boards[this.currentBoardIndex];
       if (this.boardFinished[this.currentBoardIndex]) return;
@@ -838,38 +842,33 @@ class GameScene extends Phaser.Scene {
     }
     
     if (this.isPaused) {
+      // Pause timer event
+      if (this.timerEvent) {
+        this.timerEvent.paused = true;
+      }
       // Add pause overlay
       this.showPauseOverlay();
     } else {
+      // Resume timer event
+      if (this.timerEvent) {
+        this.timerEvent.paused = false;
+      }
       // Remove pause overlay
       this.hidePauseOverlay();
     }
   }
 
   showPauseOverlay() {
-    if (!this.pauseOverlay) {
-      // Centriramo pause overlay u canvas-u
-      const canvasWidth = 1200;
-      const canvasHeight = 900;
-      const overlayX = canvasWidth / 2;
-      const overlayY = canvasHeight / 2;
-      
-      this.pauseOverlay = this.add.rectangle(overlayX, overlayY, canvasWidth, canvasHeight, 0x000000, 0.7);
-      this.pauseText = this.add.text(overlayX, overlayY, 'PAUSED', { 
-        fontSize: '48px', 
-        color: '#ffffff',
-        fontStyle: 'bold',
-        fontFamily: 'Arial, sans-serif'
-      }).setOrigin(0.5);
+    const pauseOverlay = document.getElementById('pauseOverlay');
+    if (pauseOverlay) {
+      pauseOverlay.style.display = 'flex';
     }
   }
 
   hidePauseOverlay() {
-    if (this.pauseOverlay) {
-      this.pauseOverlay.destroy();
-      this.pauseText.destroy();
-      this.pauseOverlay = null;
-      this.pauseText = null;
+    const pauseOverlay = document.getElementById('pauseOverlay');
+    if (pauseOverlay) {
+      pauseOverlay.style.display = 'none';
     }
   }
 
