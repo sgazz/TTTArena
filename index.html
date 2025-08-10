@@ -292,46 +292,11 @@
       display: none;
     }
 
-    /* Tooltip styles */
-    button[title]:hover::after {
-      content: attr(title);
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--crt-bg-dark);
-      color: var(--crt-green);
-      padding: 5px 8px;
-      border: 1px solid var(--crt-green);
-      border-radius: 0;
-      font-size: 10px;
-      white-space: nowrap;
-      z-index: 1000;
-      margin-bottom: 5px;
-      box-shadow: var(--crt-glow);
-    }
 
-    button::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, var(--crt-green), transparent);
-      transition: left 0.5s;
-    }
 
-    button:hover { 
-      background: var(--crt-green-dark);
-      color: var(--crt-bg-dark);
-      box-shadow: var(--crt-border-glow);
-      transform: translateY(-2px);
-    }
 
-    button:hover::before {
-      left: 100%;
-    }
+
+
 
     button:active {
       transform: translateY(0);
@@ -345,10 +310,10 @@
       top: 30px; 
       transform: translateX(-50%);
       background: var(--crt-bg-dark);
-      padding: 15px 25px;
+      padding: 20px 35px;
       border: 3px solid var(--crt-green);
       border-radius: 0;
-      min-width: 400px;
+      min-width: 450px;
       box-shadow: var(--crt-border-glow);
       text-align: center;
       z-index: 10;
@@ -394,7 +359,7 @@
     .player { 
       font-weight: 900;
       color: var(--crt-green);
-      font-size: 20px;
+      font-size: 28px;
       text-transform: uppercase;
       letter-spacing: 2px;
       min-width: 20px;
@@ -404,7 +369,7 @@
     .score { 
       font-weight: 700;
       color: var(--crt-green-dim);
-      font-size: 18px;
+      font-size: 24px;
       text-transform: uppercase;
       letter-spacing: 2px;
       min-width: 20px;
@@ -414,7 +379,7 @@
     .separator {
       font-weight: 700;
       color: var(--crt-green);
-      font-size: 18px;
+      font-size: 24px;
       text-transform: uppercase;
       letter-spacing: 2px;
       margin: 0 5px;
@@ -425,7 +390,7 @@
     .time { 
       font-weight: 700;
       color: var(--crt-green);
-      font-size: 16px;
+      font-size: 22px;
       text-transform: uppercase;
       letter-spacing: 2px;
       min-width: 35px;
@@ -507,11 +472,7 @@
       min-width: 80px;
     }
 
-    .ai-btn:hover {
-      background: var(--crt-green-dark);
-      color: var(--crt-bg-dark);
-      box-shadow: var(--crt-border-glow);
-    }
+
 
     .ai-btn.active {
       background: var(--crt-green);
@@ -540,11 +501,7 @@
       margin-top: 8px;
     }
 
-    #tournament-button:hover {
-      background: var(--crt-green-dark);
-      color: var(--crt-bg-dark);
-      box-shadow: var(--crt-border-glow);
-    }
+
 
     #tournament-button .status { 
       font-size: 11px;
@@ -570,11 +527,7 @@
       border-color: var(--crt-green-dim);
     }
 
-    #tournament-button.disabled:hover {
-      background: var(--crt-bg-dark);
-      color: var(--crt-green);
-      box-shadow: var(--crt-glow);
-    }
+
 
     /* Tournament Info - now part of UI panel */
     #tournament-info { 
@@ -620,11 +573,7 @@
       color: white;
     }
 
-    #btnStopTournament:hover {
-      background: #cc3333;
-      border-color: #cc3333;
-      color: white;
-    }
+
 
     /* Game Over Modal */
     #gameOver { 
@@ -729,10 +678,7 @@
       border-color: var(--crt-green);
     }
 
-    #btnConfirmYes:hover {
-      background: var(--crt-green);
-      color: var(--crt-bg-dark);
-    }
+
 
     #btnConfirmNo {
       background: var(--crt-bg-dark);
@@ -740,10 +686,7 @@
       color: var(--crt-green-dim);
     }
 
-    #btnConfirmNo:hover {
-      background: var(--crt-green-dim);
-      color: var(--crt-bg-dark);
-    }
+
 
 
 
@@ -801,6 +744,12 @@
       50% { opacity: 1; }
     }
 
+    @keyframes critical-shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-2px); }
+      75% { transform: translateX(2px); }
+    }
+
     /* Footer with Keyboard Shortcuts */
     #footer {
       position: fixed;
@@ -847,6 +796,32 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
+    }
+
+    /* Sound Button */
+    #btnSound {
+      background: var(--crt-bg-dark);
+      border: 2px solid var(--crt-green);
+      color: var(--crt-green);
+      font-size: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      text-shadow: var(--crt-text-glow);
+      box-shadow: var(--crt-glow);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      min-width: 120px;
+    }
+
+
+
+    #btnSound.muted {
+      opacity: 0.5;
+      border-color: var(--crt-green-dim);
+    }
       box-shadow: var(--crt-glow);
     }
 
@@ -926,20 +901,21 @@
     <button id="btnPvP" class="mode-btn" data-mode="PvP">PvP</button>
     <button id="btnPvAI" class="mode-btn" data-mode="PvAI">PvAI</button>
     <button id="btnAIvP" class="mode-btn" data-mode="AIvP">AIvP</button>
-    <button id="btnNewGame" title="Start a new game (Ctrl+N)">New Game</button>
-    <button id="btnReset" title="Reset current game (Ctrl+R)">Reset</button>
-    <button id="btnPause" title="Pause/Resume game (Space)">Pause</button>
-    <button id="btnReplay" title="Replay last game moves" disabled>Replay</button>
+    <button id="btnNewGame">New Game</button>
+    <button id="btnReset">Reset</button>
+    <button id="btnPause">Pause</button>
+    <button id="btnReplay" disabled>Replay</button>
+    <button id="btnSound">SOUND ON/OFF</button>
     
     <!-- Tournament elements moved here -->
-    <div id="tournament-button" title="Start tournament mode (Ctrl+T)">
+    <div id="tournament-button">
       <div class="status" id="tournamentStatus">Play Tournament</div>
     </div>
 
-    <div id="tournament-info">
+    <div id="tournament-info" style="display: none;">
       <h3>Progress</h3>
       <div class="progress" id="tournamentProgress">0/5</div>
-      <button id="btnStopTournament" title="Stop tournament (Ctrl+Shift+T)" style="display: none;">Stop</button>
+      <button id="btnStopTournament" style="display: none;">Stop</button>
     </div>
   </div>
 
@@ -1001,6 +977,7 @@
       <span class="shortcut-item"><span class="key">CTRL+R</span> Reset</span>
       <span class="shortcut-item"><span class="key">CTRL+1/2/3</span> Modes</span>
       <span class="shortcut-item"><span class="key">CTRL+T</span> Tournament</span>
+      <span class="shortcut-item"><span class="key">CTRL+S</span> Sound</span>
       <span class="shortcut-item"><span class="key">CTRL+H</span> Hide Help</span>
     </div>
   </footer>

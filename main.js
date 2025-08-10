@@ -41,6 +41,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const btnReset = document.getElementById('btnReset');
   const btnPause = document.getElementById('btnPause');
   const btnReplay = document.getElementById('btnReplay');
+  const btnSound = document.getElementById('btnSound');
   const btnCloseGameOver = document.getElementById('btnCloseGameOver');
 
   // Helper function to get game scene
@@ -388,6 +389,13 @@ window.addEventListener('DOMContentLoaded', () => {
           toggleFooter();
         }
         break;
+      case 's':
+      case 'S':
+        if (event.ctrlKey) {
+          event.preventDefault();
+          toggleSound();
+        }
+        break;
     }
   });
 
@@ -403,6 +411,27 @@ window.addEventListener('DOMContentLoaded', () => {
         scene.togglePause();
       }
     });
+  }
+
+  // Sound toggle functionality
+  let soundEnabled = true;
+  
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    const scene = getGameScene();
+    if (scene) {
+      scene.soundEnabled = soundEnabled;
+    }
+    
+    if (btnSound) {
+      btnSound.textContent = soundEnabled ? 'SOUND ON/OFF' : 'SOUND ON/OFF';
+      btnSound.classList.toggle('muted', !soundEnabled);
+    }
+  }
+
+  // Add sound button event listener
+  if (btnSound) {
+    btnSound.addEventListener('click', toggleSound);
   }
 
   // Footer toggle functionality

@@ -70,6 +70,12 @@ class GameScene extends Phaser.Scene {
     
     this.initState();
     console.log('State initialized');
+    
+    // Load and initialize sounds only if not already loaded
+    if (!this.sounds || Object.keys(this.sounds).length === 0) {
+      this.loadAndInitSounds();
+    }
+    
     this.drawBoards();
     console.log('Boards drawn');
     this.drawHeader();
@@ -109,6 +115,9 @@ class GameScene extends Phaser.Scene {
   }
 
   initState() {
+    // Save sounds before reset
+    const savedSounds = this.sounds || {};
+    
     this.boards = [];
     this.boardFinished = [];
     this.boardWinners = Array(this.BOARD_COUNT).fill(null);
@@ -120,6 +129,10 @@ class GameScene extends Phaser.Scene {
     this.gameActive = true;
     this.lastBonus = null;
     this.winningCells = [];
+    this.soundEnabled = true;
+    
+    // Restore sounds after reset
+    this.sounds = savedSounds;
 
     for (let i=0;i<this.BOARD_COUNT;i++){
       this.boards.push(Array(9).fill(null));
@@ -163,16 +176,31 @@ class GameScene extends Phaser.Scene {
   animateCriticalTimer() {
     const timerElement = document.getElementById(this.currentPlayer === 'X' ? 'timeX' : 'timeO');
     if (timerElement) {
+      // Enhanced critical timer animation
       timerElement.style.color = '#ff4444';
       timerElement.style.fontWeight = 'bold';
+      timerElement.style.textShadow = '0 0 15px #ff4444';
       
-      // Pulse animation
-      timerElement.style.animation = 'pulse 0.5s ease-in-out';
+      // Scale and shake animation
+      timerElement.style.transform = 'scale(1.2)';
+      timerElement.style.transition = 'all 0.1s ease-in-out';
       
-      // Reset animation after 0.5s
-      setTimeout(() => {
-        timerElement.style.animation = '';
-      }, 500);
+      // Create shake effect
+      let shakeCount = 0;
+      const shakeInterval = setInterval(() => {
+        const shakeX = (Math.random() - 0.5) * 4;
+        const shakeY = (Math.random() - 0.5) * 4;
+        timerElement.style.transform = `scale(1.2) translate(${shakeX}px, ${shakeY}px)`;
+        
+        shakeCount++;
+        if (shakeCount >= 5) {
+          clearInterval(shakeInterval);
+          timerElement.style.transform = 'scale(1)';
+          timerElement.style.textShadow = '';
+          timerElement.style.color = '';
+          timerElement.style.fontWeight = '';
+        }
+      }, 100);
     }
   }
 
@@ -222,6 +250,9 @@ class GameScene extends Phaser.Scene {
     this.gameActive = false;
     const winner = this.currentPlayer === 'X' ? 'O' : 'X';
     
+    // Play error sound for timeout
+    this.playSound('error');
+    
     if (this.tournamentMode) {
       this.handleTournamentGameEnd(winner);
     } else {
@@ -266,8 +297,10 @@ class GameScene extends Phaser.Scene {
     this.gameActive = false;
     
     if (winner === 'D') {
+      this.playSound('draw');
       this.showGameOver('D', 'draw');
     } else {
+      this.playSound('win');
       this.showGameOver(winner, 'complete');
     }
   }
@@ -343,16 +376,16 @@ class GameScene extends Phaser.Scene {
           const cx = x0 + gridOffsetX + col * (this.cellSize + this.cellSpacing) + this.cellSize/2;
           const cy = y0 + gridOffsetY + row * (this.cellSize + this.cellSpacing) + this.cellSize/2;
           const rect = this.add.rectangle(cx, cy, this.cellSize, this.cellSize, 0x0a0a0a).setStrokeStyle(1, 0x00ff41);
-          const txt = this.add.text(cx, cy, this.boards[b][row*3+col] || '', { fontSize: '16px', color: '#00ff41', fontFamily: 'Orbitron, monospace', fontStyle: 'bold' }).setOrigin(0.5);
+          const txt = this.add.text(cx, cy, this.boards[b][row*3+col] || '', { fontSize: '20px', color: '#00ff41', fontFamily: 'Orbitron, monospace', fontStyle: 'bold' }).setOrigin(0.5);
           cells.push({ rect, txt, index: row*3+col, cx, cy });
         }
       }
 
       // Board name - herojsko ime - centriran iznad većeg background kvadrata
-      const label = this.add.text(x0 + (miniSize + 20)/2, y0 - 22, this.boardNames[b], { fontSize: '12px', color: '#00ff41', fontFamily: 'Orbitron, monospace', fontStyle: 'bold' }).setOrigin(0.5);
+      const label = this.add.text(x0 + (miniSize + 20)/2, y0 - 22, this.boardNames[b], { fontSize: '16px', color: '#00ff41', fontFamily: 'Orbitron, monospace', fontStyle: 'bold' }).setOrigin(0.5);
 
       // Winner indicator - manji font - centriran u gornjem desnom uglu većeg background kvadrata
-      const winnerStamp = this.add.text(x0 + miniSize + 5, y0 - 15, this.boardWinners[b] ? this.boardWinners[b] : '', { fontSize: '12px', color: '#00ff41', fontFamily: 'Orbitron, monospace', fontStyle: 'bold' }).setOrigin(0.5);
+      const winnerStamp = this.add.text(x0 + miniSize + 5, y0 - 15, this.boardWinners[b] ? this.boardWinners[b] : '', { fontSize: '14px', color: '#00ff41', fontFamily: 'Orbitron, monospace', fontStyle: 'bold' }).setOrigin(0.5);
 
       this.minis.push({
         x0, y0, bg, highlight, cells, label, winnerStamp, index: b
@@ -412,14 +445,20 @@ class GameScene extends Phaser.Scene {
       for (let c of mini.cells) {
         const bounds = c.rect.getBounds();
         if (Phaser.Geom.Rectangle.Contains(bounds, pointer.x, pointer.y)) {
-          // Hover effect - scale up cell
+          // Enhanced hover effect - scale up cell with glow
           this.tweens.add({
             targets: c.rect,
-            scaleX: 1.05,
-            scaleY: 1.05,
-            duration: 100,
-            ease: 'Power2'
+            scaleX: 1.08,
+            scaleY: 1.08,
+            duration: 150,
+            ease: 'Back.easeOut'
           });
+          
+          // Add glow effect
+          c.rect.setStrokeStyle(3, 0x00ff41);
+          
+          // Play tap sound on hover
+          this.playSound('tap');
           return;
         }
       }
@@ -439,9 +478,12 @@ class GameScene extends Phaser.Scene {
             targets: c.rect,
             scaleX: 1,
             scaleY: 1,
-            duration: 100,
-            ease: 'Power2'
+            duration: 150,
+            ease: 'Back.easeOut'
           });
+          
+          // Remove glow effect
+          c.rect.setStrokeStyle(1, 0x00ff41);
           return;
         }
       }
@@ -450,9 +492,15 @@ class GameScene extends Phaser.Scene {
 
   onCellClick(boardIndex, cellIndex) {
     if (this.isPaused || !this.gameActive) return;
-    if (this.boardFinished[boardIndex]) return;
+    if (this.boardFinished[boardIndex]) {
+      this.playSound('error');
+      return;
+    }
     const board = this.boards[boardIndex];
-    if (board[cellIndex]) return;
+    if (board[cellIndex]) {
+      this.playSound('error');
+      return;
+    }
 
     // Start timer on first move
     if (!this.gameActive) {
@@ -485,15 +533,27 @@ class GameScene extends Phaser.Scene {
     const mini = this.minis[boardIndex];
     const cell = mini.cells[cellIndex];
     if (cell && cell.rect) {
-      // Pulse animation for placed move
+      // Enhanced move animation with bounce and glow
       this.tweens.add({
         targets: cell.rect,
-        scaleX: 1.1,
-        scaleY: 1.1,
-        duration: 150,
+        scaleX: 1.2,
+        scaleY: 1.2,
+        duration: 200,
         yoyo: true,
+        ease: 'Bounce.easeOut'
+      });
+      
+      // Add temporary glow effect
+      cell.rect.setStrokeStyle(4, 0x00ff41);
+      this.tweens.add({
+        targets: cell.rect,
+        strokeAlpha: 0.3,
+        duration: 400,
         ease: 'Power2'
       });
+      
+      // Create particle effect
+      this.createMoveParticles(cell.cx, cell.cy, this.currentPlayer);
     }
     
     this.updateBoardsVisual();
@@ -533,26 +593,44 @@ class GameScene extends Phaser.Scene {
   }
 
   animateBoardTransition(fromBoard, toBoard) {
-    // Fade out current board highlight
+    // Enhanced board transition with slide and glow effects
+    
+    // Fade out current board highlight with scale
     const fromMini = this.minis[fromBoard];
     if (fromMini && fromMini.highlight) {
       this.tweens.add({
         targets: fromMini.highlight,
-        alpha: 0.3,
-        duration: 200,
+        alpha: 0.2,
+        scaleX: 0.95,
+        scaleY: 0.95,
+        duration: 300,
         ease: 'Power2'
       });
     }
 
-    // Fade in new board highlight
+    // Fade in new board highlight with bounce
     const toMini = this.minis[toBoard];
     if (toMini && toMini.highlight) {
+      toMini.highlight.setScale(1.1);
       this.tweens.add({
         targets: toMini.highlight,
         alpha: 1,
-        duration: 300,
-        ease: 'Power2',
+        scaleX: 1,
+        scaleY: 1,
+        duration: 400,
+        ease: 'Back.easeOut',
         delay: 200
+      });
+      
+      // Add pulse effect to new board
+      this.tweens.add({
+        targets: toMini.highlight,
+        scaleX: 1.05,
+        scaleY: 1.05,
+        duration: 200,
+        yoyo: true,
+        repeat: 2,
+        delay: 600
       });
     }
   }
@@ -630,15 +708,35 @@ class GameScene extends Phaser.Scene {
     // Create winning line
     this.drawWinningLine(boardIndex, winningCombo);
 
-    // Blink animation
+    // Enhanced winning animation with explosion effect
+    this.winningCells.forEach(cell => {
+      // Scale up winning cells
+      this.tweens.add({
+        targets: cell,
+        scaleX: 1.3,
+        scaleY: 1.3,
+        duration: 300,
+        ease: 'Back.easeOut'
+      });
+      
+      // Add glow effect
+      cell.setStrokeStyle(5, 0xffcc66);
+    });
+    
+    // Blink animation with rotation
     this.blinkTween = this.tweens.add({
       targets: this.winningCells,
       alpha: 0,
-      duration: 200,
+      rotation: 0.1,
+      duration: 150,
       yoyo: true,
-      repeat: 4,
+      repeat: 6,
       onComplete: () => {
-        this.winningCells.forEach(cell => cell.setAlpha(1));
+        this.winningCells.forEach(cell => {
+          cell.setAlpha(1);
+          cell.setRotation(0);
+          cell.setStrokeStyle(1, 0x00ff41);
+        });
         this.winningCells = [];
         // Remove winning line
         if (this.winningLine) {
@@ -647,6 +745,9 @@ class GameScene extends Phaser.Scene {
         }
       }
     });
+    
+    // Create explosion particles
+    this.createWinParticles(boardIndex, winner);
   }
 
   drawWinningLine(boardIndex, winningCombo) {
@@ -686,17 +787,68 @@ class GameScene extends Phaser.Scene {
   animateScoreUpdate(winner) {
     const scoreElement = document.getElementById(winner === 'X' ? 'scoreX' : 'scoreO');
     if (scoreElement) {
-      // Scale up and change color
-      scoreElement.style.transform = 'scale(1.2)';
+      // Enhanced score animation with floating text
+      const originalText = scoreElement.textContent;
+      const newScore = parseInt(originalText) + 1;
+      
+      // Create floating +1 text
+      const floatingText = document.createElement('div');
+      floatingText.textContent = '+1';
+      floatingText.style.position = 'absolute';
+      floatingText.style.color = '#ffcc66';
+      floatingText.style.fontSize = '20px';
+      floatingText.style.fontWeight = 'bold';
+      floatingText.style.fontFamily = 'Orbitron, monospace';
+      floatingText.style.textShadow = '0 0 10px #ffcc66';
+      floatingText.style.pointerEvents = 'none';
+      floatingText.style.zIndex = '1000';
+      
+      // Position floating text
+      const rect = scoreElement.getBoundingClientRect();
+      floatingText.style.left = rect.left + 'px';
+      floatingText.style.top = rect.top + 'px';
+      
+      document.body.appendChild(floatingText);
+      
+      // Animate floating text
+      const startY = rect.top;
+      const endY = startY - 50;
+      const startTime = Date.now();
+      const duration = 1000;
+      
+      const animateFloat = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = elapsed / duration;
+        
+        if (progress < 1) {
+          const currentY = startY - (progress * 50);
+          const opacity = 1 - progress;
+          floatingText.style.top = currentY + 'px';
+          floatingText.style.opacity = opacity;
+          requestAnimationFrame(animateFloat);
+        } else {
+          document.body.removeChild(floatingText);
+        }
+      };
+      
+      animateFloat();
+      
+      // Update score with animation
+      scoreElement.style.transform = 'scale(1.3)';
       scoreElement.style.color = '#ffcc66';
       scoreElement.style.fontWeight = 'bold';
+      scoreElement.style.textShadow = '0 0 15px #ffcc66';
+      
+      // Update score text
+      scoreElement.textContent = newScore;
       
       // Reset after animation
       setTimeout(() => {
         scoreElement.style.transform = 'scale(1)';
         scoreElement.style.color = '';
         scoreElement.style.fontWeight = '';
-      }, 500);
+        scoreElement.style.textShadow = '';
+      }, 600);
     }
   }
 
@@ -783,10 +935,109 @@ class GameScene extends Phaser.Scene {
     return null;
   }
 
+  loadAndInitSounds() {
+    // Load sounds directly using fetch and create audio elements
+    const soundFiles = ['move', 'tap', 'win', 'lose', 'error', 'draw'];
+    
+    let loadedCount = 0;
+    
+    soundFiles.forEach(soundName => {
+      const soundPath = `sounds/${soundName}.wav`;
+      
+      // Create audio element
+      const audio = new Audio(soundPath);
+      audio.preload = 'auto';
+      
+      // Store in sounds object
+      this.sounds[soundName] = audio;
+      
+      // Add event listeners
+      audio.addEventListener('canplaythrough', () => {
+        loadedCount++;
+      });
+      
+      audio.addEventListener('error', (e) => {
+        console.error(`Error loading sound ${soundName}:`, e);
+      });
+    });
+  }
+
+  createMoveParticles(x, y, player) {
+    // Create particle effect for move
+    const particles = this.add.particles(x, y, 'particle', {
+      speed: { min: 50, max: 100 },
+      scale: { start: 0.5, end: 0 },
+      lifespan: 500,
+      quantity: 8,
+      tint: player === 'X' ? 0xff4444 : 0x4444ff,
+      blendMode: 'ADD'
+    });
+    
+    // Destroy particles after animation
+    this.time.delayedCall(500, () => {
+      particles.destroy();
+    });
+  }
+
+  createWinParticles(boardIndex, winner) {
+    const mini = this.minis[boardIndex];
+    if (!mini) return;
+    
+    // Create explosion particles from center of board
+    const centerX = mini.x0 + (mini.bg.width / 2);
+    const centerY = mini.y0 + (mini.bg.height / 2);
+    
+    const particles = this.add.particles(centerX, centerY, 'particle', {
+      speed: { min: 100, max: 200 },
+      scale: { start: 1, end: 0 },
+      lifespan: 800,
+      quantity: 15,
+      tint: 0xffcc66,
+      blendMode: 'ADD',
+      angle: { min: 0, max: 360 }
+    });
+    
+    // Destroy particles after animation
+    this.time.delayedCall(800, () => {
+      particles.destroy();
+    });
+  }
+
   playSound(type) {
-    // Placeholder for sound effects
-    // In real implementation, you would load and play actual sound files
-    console.log(`Playing ${type} sound`);
+    // Check if sound is enabled
+    if (this.soundEnabled === false) {
+      return;
+    }
+    
+    // Try to play sound from sounds object
+    if (this.sounds && this.sounds[type]) {
+      try {
+        const audio = this.sounds[type];
+        
+        // Check if audio is ready
+        if (audio.readyState < 2) { // HAVE_CURRENT_DATA
+          return;
+        }
+        
+        // Reset audio to beginning if it's already playing
+        if (!audio.paused) {
+          audio.currentTime = 0;
+        }
+        
+        // Play the sound
+        const playPromise = audio.play();
+        
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error(`Error playing sound ${type}:`, error);
+          });
+        }
+        
+        return;
+      } catch (error) {
+        console.error(`Error playing sound ${type}:`, error);
+      }
+    }
   }
 
   setMode(m) {
