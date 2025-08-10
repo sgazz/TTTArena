@@ -125,6 +125,9 @@ class GameScene extends Phaser.Scene {
       this.boards.push(Array(9).fill(null));
       this.boardFinished.push(false);
     }
+
+    // Update replay button state
+    this.updateReplayButton();
   }
 
   startTimer() {
@@ -470,6 +473,9 @@ class GameScene extends Phaser.Scene {
       timestamp: Date.now()
     });
 
+    // Enable replay button if we have moves
+    this.updateReplayButton();
+
     // Play move sound
     this.playSound('move');
 
@@ -798,7 +804,7 @@ class GameScene extends Phaser.Scene {
     }
   }
 
-  resetTournament() {
+  resetGame() {
     this.initState();
     this.drawBoards();
     this.startTimer();
@@ -810,6 +816,10 @@ class GameScene extends Phaser.Scene {
       // Ako je tournament mode, ažuriraj tournament info
       this.updateTournamentInfo();
     }
+  }
+
+  resetTournament() {
+    this.resetGame();
   }
 
   maybeTriggerAIMove() {
@@ -889,6 +899,12 @@ class GameScene extends Phaser.Scene {
     this.isReplaying = true;
     this.replayIndex = 0;
     
+    // Disable replay button during replay
+    const btnReplay = document.getElementById('btnReplay');
+    if (btnReplay) {
+      btnReplay.disabled = true;
+    }
+    
     // Reset game state
     this.resetTournament();
     
@@ -900,6 +916,9 @@ class GameScene extends Phaser.Scene {
     if (!this.isReplaying || this.replayIndex >= this.moveHistory.length) {
       this.isReplaying = false;
       console.log('Replay finished');
+      
+      // Re-enable replay button
+      this.updateReplayButton();
       return;
     }
 
@@ -946,6 +965,7 @@ class GameScene extends Phaser.Scene {
     console.log('Starting tournament mode');
     this.showTournamentInfo();
     this.updateTournamentInfo();
+    this.updateTournamentButtonState(true);
     this.startNextTournamentGame();
   }
 
@@ -1009,6 +1029,23 @@ class GameScene extends Phaser.Scene {
     }, 2500);
   }
 
+  stopTournament() {
+    this.tournamentMode = false;
+    this.tournamentGames = 0;
+    this.tournamentScore = { X: 0, O: 0 };
+    
+    console.log('Tournament stopped by user');
+    
+    // Reset game state
+    this.resetGame();
+    
+    // Hide tournament info and show button
+    this.hideTournamentInfo();
+    
+    // Update tournament button state
+    this.updateTournamentButtonState(false);
+  }
+
   endTournament() {
     this.tournamentMode = false;
     
@@ -1033,6 +1070,9 @@ class GameScene extends Phaser.Scene {
     
     // Sakrij tournament info i prikaži dugme
     this.hideTournamentInfo();
+    
+    // Update tournament button state
+    this.updateTournamentButtonState(false);
   }
 
   showTournamentInfo() {
@@ -1072,6 +1112,34 @@ class GameScene extends Phaser.Scene {
     }
     if (tournamentInfo) {
       tournamentInfo.style.display = 'none';
+    }
+  }
+
+  updateReplayButton() {
+    const btnReplay = document.getElementById('btnReplay');
+    if (btnReplay) {
+      btnReplay.disabled = this.moveHistory.length === 0;
+    }
+  }
+
+  updateTournamentButtonState(isActive) {
+    const tournamentButton = document.getElementById('tournament-button');
+    const btnStopTournament = document.getElementById('btnStopTournament');
+    
+    if (tournamentButton) {
+      if (isActive) {
+        tournamentButton.classList.add('active');
+        tournamentButton.classList.remove('disabled');
+        tournamentButton.title = 'Tournament in progress (Ctrl+Shift+T to stop)';
+      } else {
+        tournamentButton.classList.remove('active');
+        tournamentButton.classList.remove('disabled');
+        tournamentButton.title = 'Start tournament mode (Ctrl+T)';
+      }
+    }
+
+    if (btnStopTournament) {
+      btnStopTournament.style.display = isActive ? 'block' : 'none';
     }
   }
 }
